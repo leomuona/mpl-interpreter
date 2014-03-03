@@ -2,6 +2,10 @@
 #define MPLI_SCANNER_HPP_
 
 #include "token.hpp"
+#include <string>
+#include <fstream>
+
+#define MPL_KEYWORDS { "var", "for", "end", "in", "do", "read", "print", "int", "string", "bool", "assert" }
 
 namespace mpli {
 
@@ -10,9 +14,19 @@ namespace mpli {
  */
 class Scanner {
 private:
-    char _readChar();
+    std::ifstream _input_file;
+
+    int is_whitespace(char c);
+    int is_alpha(char c);
+    int is_digit(char c);
+
+    Token run_automaton(std::string *strbuffer);
+    Token create_token(std::string str);
 public:
-    Token nextToken();
+    Scanner();
+    ~Scanner();
+    void open_input_file(char *filename);
+    Token next_token();
 };
 
 } // namespace mpli

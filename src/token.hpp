@@ -6,7 +6,7 @@
 namespace mpli {
 
 struct Token {
-    enum TYPE { Basic, Keyword, Error };
+    enum TYPE { Basic, Keyword, EndOfFile, Error };
 
     int type;
     std::string str;
