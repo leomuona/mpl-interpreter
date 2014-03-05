@@ -4,6 +4,7 @@
 #include "token.hpp"
 #include <string>
 #include <fstream>
+#include <vector>
 
 #define MPL_KEYWORDS { "var", "for", "end", "in", "do", "read", "print", "int", "string", "bool", "assert" }
 
@@ -14,6 +15,21 @@ namespace mpli {
  */
 class Scanner {
 private:
+    /* chartypes for our state-machine's table-structure */
+    enum CHARTYPE {ALPHA, DIGIT, PERIOD, COMMA, COLON, SEMICOLON, BRACKET_RIGHT,
+        BRACKET_LEFT, PLUS, MINUS, QUESTIONM, SLASH, BACKSLASH, EXCLAMATIONM,
+        ASTERISK, AND, QUOTEM, EQUALS, SPACE, TAB, NEWLINE};
+
+    struct StateRow {
+        int curr_state;
+        CHARTYPE next_char;
+        int next_state;
+        StateRow(int cs, CHARTYPE nc, int ns) : curr_state(cs), next_char(nc), next_state(ns) { }
+    };
+
+    std::vector< std::vector<StateRow>* > _states_vec;
+    int _curr_state;
+
     std::ifstream _input_file;
 
     int is_whitespace(char c);

@@ -5,6 +5,14 @@ namespace mpli {
 
 Scanner::Scanner()
 {
+    _curr_state = 0;
+
+    /* constructing states table */
+    /* 0: initial state */
+    std::vector<StateRow> *v0 = new std::vector<StateRow>();
+    v0->push_back(StateRow(0, ALPHA, 1));
+    v0->push_back(StateRow(0, DIGIT, 2));
+    _states_vec.push_back(v0);
 
 }
 
@@ -12,6 +20,12 @@ Scanner::~Scanner()
 {
     if (_input_file.is_open())
         _input_file.close();
+
+    while (!_states_vec.empty()) {
+        std::vector<StateRow> *v = _states_vec.back();
+        _states_vec.pop_back();
+        delete v;
+    }
 }
 
 int Scanner::is_whitespace(char c)
@@ -73,7 +87,6 @@ void Scanner::open_input_file(char *filename)
 
 Token Scanner::next_token()
 {
-    _curr_state = 1;
     if (_input_file.good()) {
         /* run automaton with string buffer */
         std::string *strbuffer;
