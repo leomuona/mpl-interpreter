@@ -17,17 +17,26 @@ class Scanner {
 private:
     /* chartypes for our state-machine's table-structure */
     enum CHARTYPE {ALPHA, DIGIT, PERIOD, COMMA, COLON, SEMICOLON, BRACKET_RIGHT,
-        BRACKET_LEFT, PLUS, MINUS, QUESTIONM, SLASH, BACKSLASH, EXCLAMATIONM,
-        ASTERISK, AND, QUOTEM, EQUALS, SPACE, TAB, NEWLINE};
+        BRACKET_LEFT, PLUS, MINUS, SLASH, BACKSLASH, EXCLAMATIONM, ASTERISK, AND,
+        QUOTEM, EQUALS, SPACE, TAB, NEWLINE};
 
     struct StateRow {
-        int curr_state;
         CHARTYPE next_char;
         int next_state;
-        StateRow(int cs, CHARTYPE nc, int ns) : curr_state(cs), next_char(nc), next_state(ns) { }
+        StateRow(CHARTYPE nc, int ns) : next_char(nc), next_state(ns) { }
     };
 
-    std::vector< std::vector<StateRow>* > _states_vec;
+    struct State {
+        int curr_state;
+        std::vector<StateRow> state_rows;
+        State(int cs, std::vector<StateRow> sr) : curr_state(cs), state_rows(sr) { }
+    };
+
+    /* negative integers to define static token construction states */
+    static const int _TOKEN_COMPLETE_STATE = -1;
+    static const int _TOKEN_ERROR_STATE = -2;
+
+    std::vector<State> _states_vec;
     int _curr_state;
 
     std::ifstream _input_file;

@@ -7,13 +7,32 @@ Scanner::Scanner()
 {
     _curr_state = 0;
 
+    /* ALPHA, DIGIT, PERIOD, COMMA, COLON, SEMICOLON, BRACKET_RIGHT,
+        BRACKET_LEFT, PLUS, MINUS, SLASH, BACKSLASH, EXCLAMATIONM,
+        ASTERISK, AND, QUOTEM, EQUALS, SPACE, TAB, NEWLINE */
+
     /* constructing states table */
     /* 0: initial state */
-    std::vector<StateRow> *v0 = new std::vector<StateRow>();
-    v0->push_back(StateRow(0, ALPHA, 1));
-    v0->push_back(StateRow(0, DIGIT, 2));
-    _states_vec.push_back(v0);
+    std::vector<StateRow> v0;
+    v0.push_back(StateRow(ALPHA, 1));
+    v0.push_back(StateRow(DIGIT, 2));
+    v0.push_back(StateRow(PERIOD, 3));
+    v0.push_back(StateRow(COLON, 4));
+    v0.push_back(StateRow(SEMICOLON, 5));
+    v0.push_back(StateRow(BRACKET_RIGHT, 6));
+    v0.push_back(StateRow(BRACKET_LEFT, 7));
+    v0.push_back(StateRow(PLUS, 8));
+    v0.push_back(StateRow(MINUS, 9));
+    v0.push_back(StateRow(SLASH, 10));
+    v0.push_back(StateRow(BACKSLASH, 11));
+    v0.push_back(StateRow(EXCLAMATIONM, 12));
+    v0.push_back(StateRow(ASTERISK, 13));
+    v0.push_back(StateRow(AND, 14));
+    v0.push_back(StateRow(QUOTEM, 15));
+    v0.push_back(StateRow(EQUALS, 16));
+    _states_vec.push_back(State(0, v0));
 
+    // TODO: set certain next-states to -1 or -2
 }
 
 Scanner::~Scanner()
@@ -21,11 +40,6 @@ Scanner::~Scanner()
     if (_input_file.is_open())
         _input_file.close();
 
-    while (!_states_vec.empty()) {
-        std::vector<StateRow> *v = _states_vec.back();
-        _states_vec.pop_back();
-        delete v;
-    }
 }
 
 int Scanner::is_whitespace(char c)
