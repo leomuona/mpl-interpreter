@@ -40,7 +40,6 @@ private:
     static const int _TOKEN_ERROR_STATE = -3;
 
     std::vector<State> _states_vec;
-    int _curr_state;
 
     std::ifstream _input_file;
 

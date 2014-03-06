@@ -6,7 +6,7 @@ namespace mpli {
 
 Scanner::Scanner()
 {
-    _curr_state = 0;
+    // TODO: Handle comments // and /* */
 
     /* Constructing states table:
        Must be constructed in a priority order high-low.*/
@@ -165,7 +165,7 @@ int Scanner::get_next_state(char next_char, int curr_state)
 
 Token Scanner::run_automaton(std::string *strbuffer)
 {
-    _curr_state = 0;
+    int curr_state = 0;
     char curr_c = 0, peek_c = 0;
     peek_c = _input_file.peek();
     /* get rid of whitespace */
@@ -178,20 +178,22 @@ Token Scanner::run_automaton(std::string *strbuffer)
         return create_token(*strbuffer);
     }
 
-    // TODO: filter comments away
-
-    int next_state = _TOKEN_ERROR_STATE;
-    while (_curr_state >= 0) {
+    /* run state machine defined by states table */
+    while (curr_state >= 0 && _input_file.good()) {
         peek_c = _input_file.peek();
-        next_state = get_next_state(peek_c, _curr_state);
-        if (next_state != _TOKEN_ERROR_STATE) {
+        curr_state = get_next_state(peek_c, curr_state);
+        if (curr_state >= 0 || curr_state == _TOKEN_END_STATE) {
             _input_file.get(curr_c);
             strbuffer->push_back(curr_c);
-            _curr_state = next_state;
         }
     }    
 
-    // TODO: special case of strbuffer = 0 at this state.
+    /* if buffer is empty, it means first char is invalid token */
+    if (strbuffer->size() == 0) {
+        _input_file.get(curr_c);
+        strbuffer->push_back(curr_c);
+        return create_error_token(*strbuffer);
+    }
  
     return create_token(*strbuffer);
 }
