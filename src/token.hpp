@@ -6,12 +6,13 @@
 namespace mpli {
 
 struct Token {
-    enum TYPE { Basic, Keyword, EndOfFile, Error };
+    /* NOTE: is there a BOOLEAN token? */
+    enum TYPE { IDENTIFIER, INTEGER, STRING, BOOLEAN, OPERATOR, SYMBOLIC, KEYWORD, END_OF_FILE, ERROR };
 
-    int type;
+    TYPE type;
     std::string str;
 
-    Token(int t, std::string s) : type(t), str(s) { }
+    Token(TYPE t, std::string s) : type(t), str(s) { }
 };
 
 } // namespace mpli

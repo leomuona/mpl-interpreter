@@ -6,6 +6,13 @@ namespace mpli {
 
 Scanner::Scanner()
 {
+    /* define MiniPL keywords */
+    const char *mplkw[] = { "var", "for", "end", "in", "do", "read", "print", "int", "string", "bool", "assert" };
+    _mpl_keywords = std::vector<std::string>(mplkw, mplkw+11);
+    /* define MiniPL symbolic tokens */
+    const char *mplst[] = { ";", ":", ":=", "..", "(", ")" };
+    _mpl_symbolic_tokens = std::vector<std::string>(mplkw, mplkw+6);
+    
     // TODO: Handle comments // and /* */
 
     /* Constructing states table:
@@ -15,7 +22,6 @@ Scanner::Scanner()
     v0.push_back(StateRow(ALPHA, 10));
     v0.push_back(StateRow(DIGIT, 20));
     v0.push_back(StateRow(PERIOD, 30));
-    v0.push_back(StateRow(COMMA, _TOKEN_END_STATE));
     v0.push_back(StateRow(COLON, 40));
     v0.push_back(StateRow(SEMICOLON, _TOKEN_END_STATE));
     v0.push_back(StateRow(BRACKET_RIGHT, _TOKEN_END_STATE));
@@ -105,8 +111,6 @@ Scanner::CHARTYPE Scanner::get_char_type(char c)
     switch(c) {
         case '.':
             return PERIOD;
-        case ',':
-            return COMMA;
         case ':':
             return COLON;
         case ';':
@@ -198,21 +202,78 @@ Token Scanner::run_automaton(std::string *strbuffer)
     return create_token(*strbuffer);
 }
 
+Token::TYPE Scanner::get_token_type(std::string str)
+{
+    /* check for keywords */
+    for (int i=0; i < _mpl_keywords.size(); ++i) {
+        if (str == _mpl_keywords[i])
+            return Token::KEYWORD;
+    }
+
+    /* check for integer */
+    int is_int = 1;
+    for (int i=0; i < str.size(); ++i) {
+        if (!is_digit(str[i])) {
+            is_int = 0;
+            break;
+        }
+    }
+    if (is_int)
+        return Token::INTEGER;
+
+    /* check for string */
+    if (str.size() > 1 && str[0] == '"' && 
+        str[str.size()-1] == '"' && str[str.size()-2] != '\\')
+        return Token::STRING;
+
+    /* check for identifier */
+    if (is_alpha(str[0])) {
+        int is_ident = 1;
+        for (int i=0; i < str.size(); ++i) {
+            if (!(is_alpha(str[i]) || is_digit(str[i]) || str[i] == '_' )) {
+                is_ident = 0;
+                break;
+            }
+        }
+        if (is_ident)
+            return Token::IDENTIFIER;
+    }
+
+    /* check for operator */
+    char operators[] = "+-*/<=&!";
+    if (str.size() == 1 && (strchr(operators, str[0]) != NULL))
+        return Token::OPERATOR;
+
+    /* check for symbolic token */
+    for (int i=0; i < _mpl_symbolic_tokens.size(); ++i) {
+        if (str == _mpl_symbolic_tokens[i])
+            return Token::SYMBOLIC;
+    }
+
+    return Token::ERROR; 
+}
+
 Token Scanner::create_token(std::string str)
 {
     if (str.size() == 0) {
         if (_input_file.eof())
-            return Token(Token::EndOfFile, str);
-        return Token(Token::Error, str);
+            return Token(Token::END_OF_FILE, str);
+        return Token(Token::ERROR, str);
     }
 
-    // TODO construct token from given string
-    return Token(0, str);
+    Token::TYPE type = get_token_type(str);
+    /* strings: remove " from start and end */
+    if (type == Token::STRING) {
+        str.erase(str.end());
+        str.erase(str.begin());
+    }
+
+    return Token(type, str);
 }
 
 Token Scanner::create_error_token(std::string str)
 {
-    return Token(Token::Error, str);
+    return Token(Token::ERROR, str);
 }
 
 void Scanner::open_input_file(char *filename)

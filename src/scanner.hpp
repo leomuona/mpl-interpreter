@@ -6,8 +6,6 @@
 #include <fstream>
 #include <vector>
 
-#define MPL_KEYWORDS { "var", "for", "end", "in", "do", "read", "print", "int", "string", "bool", "assert" }
-
 namespace mpli {
 
 /*
@@ -16,7 +14,7 @@ namespace mpli {
 class Scanner {
 private:
     /* chartypes for our state-machine's table-structure */
-    enum CHARTYPE {ALPHA, DIGIT, PERIOD, COMMA, COLON, SEMICOLON, BRACKET_RIGHT,
+    enum CHARTYPE {ALPHA, DIGIT, PERIOD, COLON, SEMICOLON, BRACKET_RIGHT,
         BRACKET_LEFT, PLUS, MINUS, SLASH, BACKSLASH, EXCLAMATIONM, ASTERISK, AND,
         QUOTEM, EQUALS, UNDERSCORE, SPACE, TAB, NEWLINE, OTHER, NOT_ANY};
 
@@ -41,12 +39,18 @@ private:
 
     std::vector<State> _states_vec;
 
+    /* MiniPL keywords */
+    std::vector<std::string> _mpl_keywords;
+    /* MiniPL symbolic tokens */
+    std::vector<std::string> _mpl_symbolic_tokens;    
+
     std::ifstream _input_file;
 
     int is_whitespace(char c);
     int is_alpha(char c);
     int is_digit(char c);
     CHARTYPE get_char_type(char c);
+    Token::TYPE get_token_type(std::string str);
 
     int get_next_state(char next_char, int curr_state);
     Token run_automaton(std::string *strbuffer);
