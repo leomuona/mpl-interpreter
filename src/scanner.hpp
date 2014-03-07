@@ -5,6 +5,7 @@
 #include <string>
 #include <fstream>
 #include <vector>
+#include <map>
 
 namespace mpli {
 
@@ -26,23 +27,12 @@ private:
         StateRow(CHARTYPE nc, int ns, int nf) : next_char(nc), next_state(ns), not_flag(nf) { }
     };
 
-    struct State {
-        int curr_state;
-        std::vector<StateRow> state_rows;
-        State(int cs, std::vector<StateRow> sr) : curr_state(cs), state_rows(sr) { }
-    };
-
     /* negative integers to define static token construction states */
     static const int _TOKEN_END_STATE = -1;
     static const int _TOKEN_BREAK_STATE = -2;
     static const int _TOKEN_ERROR_STATE = -3;
 
-    std::vector<State> _states_vec;
-
-    /* MiniPL keywords */
-    std::vector<std::string> _mpl_keywords;
-    /* MiniPL symbolic tokens */
-    std::vector<std::string> _mpl_symbolic_tokens;    
+    std::map<int, std::vector<StateRow> > _states_map;
 
     std::ifstream _input_file;
 
@@ -59,7 +49,7 @@ private:
 public:
     Scanner();
     ~Scanner();
-    void open_input_file(char *filename);
+    void open_input_file(const char *filename);
     Token next_token();
 };
 

@@ -6,13 +6,6 @@ namespace mpli {
 
 Scanner::Scanner()
 {
-    /* define MiniPL keywords */
-    const char *mplkw[] = { "var", "for", "end", "in", "do", "read", "print", "int", "string", "bool", "assert" };
-    _mpl_keywords = std::vector<std::string>(mplkw, mplkw+11);
-    /* define MiniPL symbolic tokens */
-    const char *mplst[] = { ";", ":", ":=", "..", "(", ")" };
-    _mpl_symbolic_tokens = std::vector<std::string>(mplkw, mplkw+6);
-    
     // TODO: Handle comments // and /* */
 
     /* Constructing states table:
@@ -34,7 +27,7 @@ Scanner::Scanner()
     v0.push_back(StateRow(AND, _TOKEN_END_STATE));
     v0.push_back(StateRow(QUOTEM, 50));
     v0.push_back(StateRow(EQUALS, _TOKEN_END_STATE));
-    _states_vec.push_back(State(0, v0));
+    _states_map[0] = v0;
 
     /* 10: aplha first: indentifier or keyword */
     std::vector<StateRow> v10;
@@ -42,38 +35,38 @@ Scanner::Scanner()
     v10.push_back(StateRow(DIGIT, 10));
     v10.push_back(StateRow(UNDERSCORE, 10));
     v10.push_back(StateRow(NOT_ANY, _TOKEN_BREAK_STATE, 1));
-    _states_vec.push_back(State(10, v10));
+    _states_map[10] = v10;
 
     /* 20: digit first: int value */
     std::vector<StateRow> v20;
     v20.push_back(StateRow(DIGIT, 20));
     v20.push_back(StateRow(DIGIT, _TOKEN_BREAK_STATE, 1));
-    _states_vec.push_back(State(20, v20));
+    _states_map[20] = v20;
 
     /* 30-31: period first: we are looking for .. operator */
     std::vector<StateRow> v30;
     v30.push_back(StateRow(PERIOD, 31));
-    _states_vec.push_back(State(30, v30));
+    _states_map[30] = v30;
     std::vector<StateRow> v31;
     v31.push_back(StateRow(PERIOD, _TOKEN_END_STATE));
-    _states_vec.push_back(State(31, v31));
+    _states_map[31] = v31;
+
 
     /* 40: colon first: we are looking at : or := tokens */
     std::vector<StateRow> v40;
     v40.push_back(StateRow(EQUALS, _TOKEN_END_STATE));
     v40.push_back(StateRow(NOT_ANY, _TOKEN_BREAK_STATE, 1));
-    _states_vec.push_back(State(40, v40));
+    _states_map[40] = v40;
 
     /* 50: quote mark: string processing */
     std::vector<StateRow> v50;
     v50.push_back(StateRow(QUOTEM, _TOKEN_END_STATE));
     v50.push_back(StateRow(BACKSLASH, 51));
     v50.push_back(StateRow(QUOTEM, 50, 1)); /* not quote mark */
-    _states_vec.push_back(State(50, v50));
+    _states_map[50] = v50;
     std::vector<StateRow> v51;
     v51.push_back(StateRow(NOT_ANY, 50, 1)); /* not not any => any */
-    _states_vec.push_back(State(51, v51));
-
+    _states_map[51] = v51;
 }
 
 Scanner::~Scanner()
@@ -152,15 +145,15 @@ Scanner::CHARTYPE Scanner::get_char_type(char c)
 
 int Scanner::get_next_state(char next_char, int curr_state)
 {
-    std::vector<StateRow> vec = _states_vec[curr_state].state_rows;
+    std::vector<StateRow> vec = _states_map[curr_state];
     CHARTYPE nc_type = get_char_type(next_char), ns_char_type = OTHER;
     int ns_not_flag = 0;
-    for (std::vector<StateRow>::iterator it = vec.begin(); it != vec.end(); ++it) {
-        ns_char_type = (*it).next_char;
-        ns_not_flag = (*it).not_flag;
+    for (int i=0; i < vec.size(); ++i) {
+        ns_char_type = vec[i].next_char;
+        ns_not_flag = vec[i].not_flag;
         if ((nc_type == ns_char_type && !ns_not_flag) |
             (nc_type != ns_char_type && ns_not_flag)) {
-            return (*it).next_state;
+            return vec[i].next_state;
         } 
     }
     /* returning error state because no defined state for this char */
@@ -191,22 +184,24 @@ Token Scanner::run_automaton(std::string *strbuffer)
             strbuffer->push_back(curr_c);
         }
     }    
-
+    
     /* if buffer is empty, it means first char is invalid token */
     if (strbuffer->size() == 0) {
         _input_file.get(curr_c);
         strbuffer->push_back(curr_c);
         return create_error_token(*strbuffer);
     }
- 
+
     return create_token(*strbuffer);
 }
 
 Token::TYPE Scanner::get_token_type(std::string str)
 {
     /* check for keywords */
-    for (int i=0; i < _mpl_keywords.size(); ++i) {
-        if (str == _mpl_keywords[i])
+    const char *keywords[] = { "var", "for", "end", "in", "do", "read", "print", "int", "string", "bool", "assert" };
+
+    for (int i=0; i<11; ++i) {
+        if (str == keywords[i])
             return Token::KEYWORD;
     }
 
@@ -245,8 +240,9 @@ Token::TYPE Scanner::get_token_type(std::string str)
         return Token::OPERATOR;
 
     /* check for symbolic token */
-    for (int i=0; i < _mpl_symbolic_tokens.size(); ++i) {
-        if (str == _mpl_symbolic_tokens[i])
+    const char* symbolics[] = {";", ":", ":=", "..", "(", ")"};
+    for (int i=0; i<6; ++i) {
+        if (str == symbolics[i])
             return Token::SYMBOLIC;
     }
 
@@ -264,8 +260,8 @@ Token Scanner::create_token(std::string str)
     Token::TYPE type = get_token_type(str);
     /* strings: remove " from start and end */
     if (type == Token::STRING) {
-        str.erase(str.end());
-        str.erase(str.begin());
+        str.erase((str.size()-1), 1);
+        str.erase(0, 1);
     }
 
     return Token(type, str);
@@ -276,7 +272,7 @@ Token Scanner::create_error_token(std::string str)
     return Token(Token::ERROR, str);
 }
 
-void Scanner::open_input_file(char *filename)
+void Scanner::open_input_file(const char *filename)
 {
     if (_input_file.is_open())
         _input_file.close();
