@@ -17,7 +17,7 @@ private:
     /* chartypes for our state-machine's table-structure */
     enum CHARTYPE {ALPHA, DIGIT, PERIOD, COLON, SEMICOLON, BRACKET_RIGHT,
         BRACKET_LEFT, PLUS, MINUS, SLASH, BACKSLASH, EXCLAMATIONM, ASTERISK, AND,
-        QUOTEM, EQUALS, UNDERSCORE, SPACE, TAB, NEWLINE, OTHER, NOT_ANY};
+        QUOTEM, EQUALS, LESS_THAN ,UNDERSCORE, SPACE, TAB, NEWLINE, OTHER, NOT_ANY};
 
     struct StateRow {
         CHARTYPE next_char;

@@ -27,6 +27,7 @@ Scanner::Scanner()
     v0.push_back(StateRow(AND, _TOKEN_END_STATE));
     v0.push_back(StateRow(QUOTEM, 50));
     v0.push_back(StateRow(EQUALS, _TOKEN_END_STATE));
+    v0.push_back(StateRow(LESS_THAN, _TOKEN_END_STATE));
     _states_map[0] = v0;
 
     /* 10: aplha first: indentifier or keyword */
@@ -67,6 +68,7 @@ Scanner::Scanner()
     std::vector<StateRow> v51;
     v51.push_back(StateRow(NOT_ANY, 50, 1)); /* not not any => any */
     _states_map[51] = v51;
+
 }
 
 Scanner::~Scanner()
@@ -130,6 +132,8 @@ Scanner::CHARTYPE Scanner::get_char_type(char c)
             return QUOTEM;
         case '=':
             return EQUALS;
+        case '<':
+            return LESS_THAN;
         case '_':
             return UNDERSCORE;
         case ' ':
@@ -197,12 +201,20 @@ Token Scanner::run_automaton(std::string *strbuffer)
 
 Token::TYPE Scanner::get_token_type(std::string str)
 {
-    /* check for keywords */
-    const char *keywords[] = { "var", "for", "end", "in", "do", "read", "print", "int", "string", "bool", "assert" };
-
-    for (int i=0; i<11; ++i) {
-        if (str == keywords[i])
-            return Token::KEYWORD;
+    /* check for keywords and symbolic tokens */
+    const char *predef_strs[] = { "var", "for", "end", "in", "do", "read",
+            "print", "int", "string", "bool", "assert", "..", ":", ":=",
+            ";", ")", "(", "+", "-", "/", "!", "*", "&", "<", "=" };
+    const Token::TYPE predef_types[] = { Token::KW_VAR, Token::KW_FOR,
+            Token::KW_END, Token::KW_IN, Token::KW_DO, Token::KW_READ,
+            Token::KW_PRINT, Token::KW_INT, Token::KW_STRING, Token::KW_BOOL,
+            Token::KW_ASSERT, Token::DOUBLEDOT, Token::COLON, Token::INSERT,
+            Token::SEMICOLON, Token::BRACKET_RIGHT, Token::BRACKET_LEFT,
+            Token::OP_ADD, Token::OP_SUBS, Token::OP_DIVIS, Token::OP_NOT,
+            Token::OP_MULT, Token::OP_AND, Token::OP_LT, Token::OP_EQ };
+    for (int i=0; i<25; ++i) {
+        if (str == predef_strs[i])
+            return predef_types[i];
     }
 
     /* check for integer */
@@ -234,18 +246,7 @@ Token::TYPE Scanner::get_token_type(std::string str)
             return Token::IDENTIFIER;
     }
 
-    /* check for operator */
-    char operators[] = "+-*/<=&!";
-    if (str.size() == 1 && (strchr(operators, str[0]) != NULL))
-        return Token::OPERATOR;
-
-    /* check for symbolic token */
-    const char* symbolics[] = {";", ":", ":=", "..", "(", ")"};
-    for (int i=0; i<6; ++i) {
-        if (str == symbolics[i])
-            return Token::SYMBOLIC;
-    }
-
+    /* cannot resolve type, return error type */
     return Token::ERROR; 
 }
 

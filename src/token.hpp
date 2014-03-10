@@ -6,19 +6,17 @@
 namespace mpli {
 
 struct Token {
-    /* NOTE: is there a BOOLEAN token? */
-    enum TYPE { IDENTIFIER, INTEGER, STRING, BOOLEAN, OPERATOR, SYMBOLIC, KEYWORD, END_OF_FILE, ERROR };
+    
+    enum TYPE { IDENTIFIER, INTEGER, STRING, DOUBLEDOT, COLON, INSERT, SEMICOLON,
+                BRACKET_RIGHT, BRACKET_LEFT, OP_ADD, OP_SUBS, OP_DIVIS, OP_NOT,
+                OP_MULT, OP_AND, OP_LT, OP_EQ, KW_VAR, KW_FOR, KW_END, KW_IN, KW_DO, KW_READ,
+                KW_PRINT, KW_INT, KW_STRING, KW_BOOL, KW_ASSERT, END_OF_FILE, ERROR };
 
     TYPE type;
     std::string str;
 
     Token(TYPE t, std::string s) : type(t), str(s) { }
 
-    std::string to_string() {
-        const char* type_strs[] = { "IDENTIFIER", "INTEGER", "STRING", "BOOLEAN", "OPERATOR", "SYMBOLIC", "KEYWORD", "END_OF_FILE", "ERROR" };
-        std::string type_str(type_strs[type]);
-        return "type: " + type_str + " str: " + str;
-    }
 };
 
 } // namespace mpli

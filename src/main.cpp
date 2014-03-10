@@ -20,7 +20,7 @@ int main(int argc, char* argv[])
     scanner.open_input_file(filename.c_str());
     Token t = scanner.next_token();
     while (t.type != Token::ERROR && t.type != Token::END_OF_FILE) {
-        std::cout << t.to_string() << std::endl;
+        std::cout << t.type << " " << t.str  << std::endl;
         t = scanner.next_token();
     }
     if (t.type == Token::END_OF_FILE) {
