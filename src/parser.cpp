@@ -29,6 +29,37 @@ void Parser::set_scanner(Scanner *scanner)
 void Parser::start()
 {
 	get_next_token();
+	// TODO: stuff
+	parse_prog();
+}
+
+void Parser::parse_prog()
+{
+	parse_stmts();
+}
+
+void Parser::parse_stmts()
+{
+	// TODO
+}
+
+void Parser::parse_stmt()
+{
+	// TODO
+}
+
+void Parser::parse_expr()
+{
+	// TODO
+}
+
+void Parser::parse_opnd()
+{
+	// TODO
+}
+
+void Parser::parse_type()
+{
 	// TODO
 }
 

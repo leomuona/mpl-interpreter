@@ -15,6 +15,14 @@ class Parser {
 		void match(Token::TYPE expected);
 		void get_next_token();
 		void token_error();
+
+		void parse_prog();
+		void parse_stmts();
+		void parse_stmt();
+		void parse_expr();
+		void parse_opnd();
+		void parse_type();
+
     public:
 		void set_scanner(Scanner *scanner);
 		void start();
