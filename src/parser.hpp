@@ -13,7 +13,6 @@ class Parser {
 		Token _curr_token;
 
 		void match(Token::TYPE expected);
-		void get_next_token();
 		void token_error();
 
 		void parse_prog();
