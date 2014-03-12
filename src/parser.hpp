@@ -21,6 +21,7 @@ class Parser {
 		void parse_expr();
 		void parse_opnd();
 		void parse_type();
+		void parse_op();
 
     public:
 		void set_scanner(Scanner *scanner);
