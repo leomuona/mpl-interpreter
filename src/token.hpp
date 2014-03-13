@@ -16,7 +16,7 @@ struct Token {
     std::string str;
 
     Token(TYPE t, std::string s) : type(t), str(s) { }
-
+    Token() { type = ERROR; str = ""; }
 };
 
 } // namespace mpli

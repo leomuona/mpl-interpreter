@@ -1,5 +1,5 @@
 #include "scanner.hpp"
-#include "token.hpp"
+#include "parser.hpp"
 
 #include <iostream>
 #include <string>
@@ -12,21 +12,16 @@ int main(int argc, char* argv[])
     }
     
     std::string filename(argv[1]);
-    std::cout << "Tokens for source file " << filename << std::endl;
+    std::cout << "Running mpl-interpreter for source file " << filename << std::endl;
     
     using namespace mpli;
 
     Scanner scanner;
     scanner.open_input_file(filename.c_str());
-    Token t = scanner.next_token();
-    while (t.type != Token::ERROR && t.type != Token::END_OF_FILE) {
-        std::cout << t.type << " " << t.str  << std::endl;
-        t = scanner.next_token();
-    }
-    if (t.type == Token::END_OF_FILE) {
-        std::cout << "End of source file " << filename << std::endl;
-    } else {
-        std::cout << "Error: token '" << t.str << "' is not valid." << std::endl;
-    }
+    Parser parser;
+    parser.set_scanner(&scanner);
+    parser.start();
+
+    std::cout << "Done." << std::endl;
     return 0;
 }

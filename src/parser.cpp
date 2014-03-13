@@ -1,19 +1,68 @@
 #include "parser.hpp"
+#include <cstdio>
 
 namespace mpli {
 
-void Parser::match(Token::TYPE expected)
+Parser::~Parser()
+{
+    /* delete parse tree recursively */
+    delete_node_r(_root_node);
+}
+
+Node *Parser::new_node(Node::TYPE type)
+{
+    Node *node = new Node;
+    node->type = type;
+    return node;
+}
+
+Node *Parser::new_token_node(Token token)
+{
+    Node *node = new Node;
+    node->type = Node::TOKEN;
+    node->token = token;
+    return node;
+}
+
+int Parser::match(Token::TYPE expected)
 {
 	if (_curr_token.type == expected) {
+        printf("Valid token: %d %s\n", _curr_token.type, _curr_token.str.c_str());
 		_curr_token = _scanner->next_token();
-	} else {
+	    return 1;
+    } else {
 		token_error();
+        return 0;
 	}
+}
+
+void Parser::parse_child_node(Token::TYPE expected, Node *parent)
+{
+    Token t = _curr_token;
+    if (match(expected)) {
+        Node *node = new_token_node(t);
+        parent->children.push_back(node);
+    }
 }
 
 void Parser::token_error()
 {
-	// TODO: print error
+    if (_curr_token.type == Token::ERROR) {
+        printf("Error: cannot resolve token type for token '%s'\n",
+               _curr_token.str.c_str());
+    } else {
+        printf("Error: '%s' is not a valid token for this location.\n", 
+               _curr_token.str.c_str());
+    }
+}
+
+void Parser::delete_node_r(Node *node)
+{
+    std::vector<Node*>::iterator it;
+    for(it = node->children.begin(); it != node->children.end(); it++) {
+        delete_node_r((*it));
+    }
+    delete node;
 }
 
 void Parser::set_scanner(Scanner *scanner)
@@ -24,20 +73,22 @@ void Parser::set_scanner(Scanner *scanner)
 void Parser::start()
 {
 	_curr_token = _scanner->next_token();
-	// TODO: stuff
 	parse_prog();
 }
 
 void Parser::parse_prog()
 {
-	parse_stmts();
+    _root_node = new_node(Node::PROG);
+	parse_stmts(_root_node);
 	match(Token::END_OF_FILE);
 }
 
-void Parser::parse_stmts()
+void Parser::parse_stmts(Node *parent)
 {
-	// TODO: stuff?
-	switch (_curr_token.type) {
+    Node *stmts_node = new_node(Node::STMTS);
+    parent->children.push_back(stmts_node);
+	
+    switch (_curr_token.type) {
 		/* <stmt> ";" ( <stmt> ";" )* */
 		case Token::KW_VAR:
 		case Token::IDENTIFIER:
@@ -45,16 +96,16 @@ void Parser::parse_stmts()
 		case Token::KW_READ:
 		case Token::KW_PRINT:
 		case Token::KW_ASSERT:
-			parse_stmt();
-			match(Token::SEMICOLON);
+			parse_stmt(stmts_node);
+			parse_child_node(Token::SEMICOLON, stmts_node);
 			while(_curr_token.type == Token::KW_VAR ||
 				  _curr_token.type == Token::IDENTIFIER ||
 				  _curr_token.type == Token::KW_FOR ||
 				  _curr_token.type == Token::KW_READ ||
 				  _curr_token.type == Token::KW_PRINT ||
 				  _curr_token.type == Token::KW_ASSERT) {
-				parse_stmt();
-				match(Token::SEMICOLON);
+				parse_stmt(stmts_node);
+				parse_child_node(Token::SEMICOLON, stmts_node);
 			}
 			break;
 		default:
@@ -62,56 +113,58 @@ void Parser::parse_stmts()
 	}
 }
 
-void Parser::parse_stmt()
+void Parser::parse_stmt(Node *parent)
 {
-	// TODO: stuff?
-	switch (_curr_token.type) {
+	Node *stmt_node = new_node(Node::STMT);
+    parent->children.push_back(stmt_node);
+
+    switch (_curr_token.type) {
 		/* "var" <var_ident> ":" <type> [ ":=" <expr> ] */
 		case Token::KW_VAR:
-			match(Token::KW_VAR);
-			match(Token::IDENTIFIER);
-			match(Token::COLON);
-			parse_type();
+			parse_child_node(Token::KW_VAR, stmt_node);
+			parse_child_node(Token::IDENTIFIER, stmt_node);
+			parse_child_node(Token::COLON, stmt_node);
+			parse_type(stmt_node);
 			if (_curr_token.type == Token::INSERT) {
-				match(Token::INSERT);
-				parse_expr();
+				parse_child_node(Token::INSERT, stmt_node);
+				parse_expr(stmt_node);
 			}
 			break;
 		/* <var_ident> ":=" <expr> */
 		case Token::IDENTIFIER:
-			match(Token::IDENTIFIER);
-			match(Token::INSERT);
-			parse_expr();
+			parse_child_node(Token::IDENTIFIER, stmt_node);
+			parse_child_node(Token::INSERT, stmt_node);
+			parse_expr(stmt_node);
 			break;
 		/* "for" <var_ident> "in" <expr> ".." <expr> "do" <stmts> "end" "for" */
 		case Token::KW_FOR:
-			match(Token::KW_FOR);
-			match(Token::IDENTIFIER);
-			match(Token::KW_IN);
-			parse_expr();
-			match(Token::DOUBLEDOT);
-			parse_expr();
-			match(Token::KW_DO);
-			parse_stmts();
-			match(Token::KW_END);
-			match(Token::KW_FOR);
+			parse_child_node(Token::KW_FOR, stmt_node);
+			parse_child_node(Token::IDENTIFIER, stmt_node);
+			parse_child_node(Token::KW_IN, stmt_node);
+			parse_expr(stmt_node);
+			parse_child_node(Token::DOUBLEDOT, stmt_node);
+			parse_expr(stmt_node);
+			parse_child_node(Token::KW_DO, stmt_node);
+			parse_stmts(stmt_node);
+			parse_child_node(Token::KW_END, stmt_node);
+			parse_child_node(Token::KW_FOR, stmt_node);
 			break;
 		/* "read" <var_ident> */
 		case Token::KW_READ:
-			match(Token::KW_READ);
-			match(Token::IDENTIFIER);
+			parse_child_node(Token::KW_READ, stmt_node);
+			parse_child_node(Token::IDENTIFIER, stmt_node);
 			break;
 		/* "print" <var_ident> */
 		case Token::KW_PRINT:
-			match(Token::KW_PRINT);
-			match(Token::IDENTIFIER);
+			parse_child_node(Token::KW_PRINT, stmt_node);
+			parse_expr(stmt_node);
 			break;
 		/* "assert" "(" <expr> ")" */
 		case Token::KW_ASSERT:
-			match(Token::KW_ASSERT);
-			match(Token::BRACKET_LEFT);
-			parse_expr();
-			match(Token::BRACKET_RIGHT);
+			parse_child_node(Token::KW_ASSERT, stmt_node);
+			parse_child_node(Token::BRACKET_LEFT, stmt_node);
+			parse_expr(stmt_node);
+			parse_child_node(Token::BRACKET_RIGHT, stmt_node);
 			break;
 		/* I AM ERROR */
 		default:
@@ -119,16 +172,18 @@ void Parser::parse_stmt()
 	}
 }
 
-void Parser::parse_expr()
+void Parser::parse_expr(Node *parent)
 {
-	// TODO: stuff?
+    Node *expr_node = new_node(Node::EXPR);
+    parent->children.push_back(expr_node);
+
 	switch (_curr_token.type) {
 		/* <opnd> <op> <opnd> | <opnd> */
 		case Token::INTEGER:
 		case Token::STRING:
 		case Token::IDENTIFIER:
 		case Token::BRACKET_LEFT:
-			parse_opnd();
+			parse_opnd(expr_node);
 			if (_curr_token.type == Token::OP_ADD || 
 			    _curr_token.type == Token::OP_SUBS ||
 				_curr_token.type == Token::OP_DIVIS ||
@@ -137,92 +192,92 @@ void Parser::parse_expr()
 				_curr_token.type == Token::OP_AND ||
 				_curr_token.type == Token::OP_LT ||
 				_curr_token.type == Token::OP_EQ) {
-				parse_op();
-				parse_opnd();
+				parse_op(expr_node);
+				parse_opnd(expr_node);
 			}
 			break;
 		/* [ <unary_op> ] <opnd> */
 		case Token::OP_NOT:
-			match(Token::OP_NOT);
-			parse_opnd();
+			parse_child_node(Token::OP_NOT, expr_node);
+			parse_opnd(expr_node);
 			break;
 		default:
 			token_error();
 	}
 }
 
-void Parser::parse_opnd()
+void Parser::parse_opnd(Node *parent)
 {
-	// TODO: stuff?
+    Node *opnd_node = new_node(Node::OPND);
+    parent->children.push_back(opnd_node);
+
 	switch (_curr_token.type) {
 		/* <int> */
 		case Token::INTEGER:
-			match(Token::INTEGER);
+			parse_child_node(Token::INTEGER, opnd_node);
 			break;
 		/* <string> */
 		case Token::STRING:
-			match(Token::STRING);
+			parse_child_node(Token::STRING, opnd_node);
 			break;
 		/* <var_ident> */
 		case Token::IDENTIFIER:
-			match(Token::IDENTIFIER);
+			parse_child_node(Token::IDENTIFIER, opnd_node);
 			break;
 		/* "(" expr ")" */
 		case Token::BRACKET_LEFT:
-			match(Token::BRACKET_LEFT);
-			parse_expr();
-			match(Token::BRACKET_RIGHT);
+			parse_child_node(Token::BRACKET_LEFT, opnd_node);
+			parse_expr(opnd_node);
+			parse_child_node(Token::BRACKET_RIGHT, opnd_node);
 			break;
 		default:
 			token_error();
 	}
 }
 
-void Parser::parse_type()
+void Parser::parse_type(Node *parent)
 {
-	// TODO: stuff?
 	switch (_curr_token.type) {
 		case Token::KW_INT:
-			match(Token::KW_INT);
+			parse_child_node(Token::KW_INT, parent);
 			break;
 		case Token::KW_STRING:
-			match(Token::KW_STRING);
+			parse_child_node(Token::KW_STRING, parent);
 			break;
 		case Token::KW_BOOL:
-			match(Token::KW_BOOL);
+			parse_child_node(Token::KW_BOOL, parent);
 			break;
 		default:
 			token_error();
 	}
 }
 
-void Parser::parse_op()
+void Parser::parse_op(Node *parent)
 {
-	// TODO: stuff?
 	switch (_curr_token.type) {
 		case Token::OP_ADD:
-			match(Token::OP_ADD);
+			parse_child_node(Token::OP_ADD, parent);
 			break;
 		case Token::OP_SUBS:
-			match(Token::OP_SUBS);
+			parse_child_node(Token::OP_SUBS, parent);
 			break;
 		case Token::OP_DIVIS:
-			match(Token::OP_DIVIS);
+			parse_child_node(Token::OP_DIVIS, parent);
 			break;
 		case Token::OP_NOT:
-			match(Token::OP_NOT);
+			parse_child_node(Token::OP_NOT, parent);
 			break;
 		case Token::OP_MULT:
-			match(Token::OP_MULT);
+			parse_child_node(Token::OP_MULT, parent);
 			break;
 		case Token::OP_AND:
-			match(Token::OP_AND);
+			parse_child_node(Token::OP_AND, parent);
 			break;
 		case Token::OP_LT:
-			match(Token::OP_LT);
+			parse_child_node(Token::OP_LT, parent);
 			break;
 		case Token::OP_EQ:
-			match(Token::OP_EQ);
+			parse_child_node(Token::OP_EQ, parent);
 			break;
 		default:
 			token_error();
