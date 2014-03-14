@@ -36,6 +36,8 @@ struct ASTNode {
         OPERATOR,
         UNARY_OP,
         FOR_LOOP,
+        FOR_IN,
+        FOR_DO,
         READ,
         PRINT,
         ASSERT,
@@ -78,6 +80,7 @@ public:
     AST();
     ~AST();
     void create(Node *root);
+    void debug_print();
 };
 
 } // namespace mpli

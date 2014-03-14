@@ -24,6 +24,11 @@ void AST::delete_node_r(ASTNode *node)
     delete node;   
 }
 
+void AST::debug_print()
+{
+    // TODO: debug print
+}
+
 void AST::create(Node *root)
 {
     _root = new ASTNode;
@@ -150,7 +155,35 @@ void AST::build_insert(ASTNode *parent, Node *stmt_node)
 
 void AST::build_for_loop(ASTNode *parent, Node *stmt_node)
 {
-    // TODO
+    /* for loop node */
+    ASTNode *for_node = new ASTNode;
+    for_node->type = ASTNode::FOR_LOOP;
+    parent->children.push_back(for_node);
+
+    /* for in node */
+    ASTNode *in_node = new ASTNode;
+    in_node->type = ASTNode::FOR_IN;
+    for_node->children.push_back(in_node);
+    
+    /* in : identifier node */
+    ASTNode *id_node = new ASTNode;
+    id_node->type = ASTNode::VAR_ID;
+    id_node->value = stmt_node->children[1]->token.str;
+    id_node->variable_type = ASTVariable::UNKNOWN;
+    in_node->children.push_back(id_node);
+
+    /* in : left side expr */
+    build_expr(in_node, stmt_node->children[3]);
+    /* in : right side expr */
+    build_expr(in_node, stmt_node->children[5]);
+
+    /* for do node */
+    ASTNode *do_node = new ASTNode;
+    do_node->type = ASTNode::FOR_DO;
+    for_node->children.push_back(do_node);
+
+    /* do : stmts */
+    build(do_node, stmt_node->children[7]);
 }
 
 void AST::build_read(ASTNode *parent, Node *stmt_node)
