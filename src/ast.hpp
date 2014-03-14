@@ -71,6 +71,7 @@ private:
     void build_print(ASTNode *parent, Node *stmt_node);
     void build_assert(ASTNode *parent, Node *stmt_node);
     void build_expr(ASTNode *parent, Node *expr_node);
+    void build_opnd(ASTNode *parent, Node *opnd_node);
 
     void delete_node_r(ASTNode *node);
 public:

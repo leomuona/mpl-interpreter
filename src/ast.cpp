@@ -140,34 +140,142 @@ void AST::build_insert(ASTNode *parent, Node *stmt_node)
     id_node->variable_type = ASTVariable::UNKNOWN;
     id_node->value = stmt_node->children[0]->token.str;
     insert_node->children.push_back(id_node);
-    
+   
+    /* set insert node to be children of parent */ 
+    parent->children.push_back(insert_node);
+
     /* add expr node tree for insert node */
     build_expr(insert_node, stmt_node->children[2]);
 }
 
 void AST::build_for_loop(ASTNode *parent, Node *stmt_node)
 {
-
+    // TODO
 }
 
 void AST::build_read(ASTNode *parent, Node *stmt_node)
 {
+    /* read node */
+    ASTNode *read_node = new ASTNode;
+    read_node->type = ASTNode::READ;
 
+    /* identifier node */
+    ASTNode *id_node = new ASTNode;
+    id_node->type = ASTNode::VAR_ID;
+    id_node->variable_type = ASTVariable::UNKNOWN;
+    id_node->value = stmt_node->children[1]->token.str;
+    read_node->children.push_back(id_node);
+
+    /* set read node to be children of parent */
+    parent->children.push_back(read_node);
 }
 
 void AST::build_print(ASTNode *parent, Node *stmt_node)
 {
+    /* print node */
+    ASTNode *print_node = new ASTNode;
+    print_node->type = ASTNode::PRINT;
 
+    /* set print node to be children of parent */
+    parent->children.push_back(print_node);
+
+    /* add expr node tree for print node */
+    build_expr(print_node, stmt_node->children[1]);
 }
 
 void AST::build_assert(ASTNode *parent, Node *stmt_node)
 {
+    /* assert node */
+    ASTNode *assert_node = new ASTNode;
+    assert_node->type = ASTNode::ASSERT;
 
+    /* set assert node to be children of parent */
+    parent->children.push_back(assert_node);
+
+    /* add expr node tree for assert node */
+    build_expr(assert_node, stmt_node->children[2]);
 }
 
 void AST::build_expr(ASTNode *parent, Node *expr_node)
 {
+    if (expr_node->children[0]->token.type == Token::OP_NOT) {
+        /* unary operator */
+        ASTNode *unary_node = new ASTNode;
+        unary_node->type = ASTNode::UNARY_OP;
+        parent->children.push_back(unary_node);
 
+        build_opnd(unary_node, expr_node->children[1]);
+    } else {
+        ASTNode *op_node = new ASTNode;
+        op_node->type = ASTNode::OPERATOR;
+        
+        switch (expr_node->children[1]->token.type) {
+            case Token::OP_ADD:
+                op_node->operator_type = ASTOperator::ADD;
+                break;
+            case Token::OP_SUBT:
+                op_node->operator_type = ASTOperator::SUBTRACT;
+                break;
+            case Token::OP_DIVIS:
+                op_node->operator_type = ASTOperator::DIVIDE;
+                break;
+            case Token::OP_NOT:
+                op_node->operator_type = ASTOperator::NOT;
+                break;
+            case Token::OP_MULT:
+                op_node->operator_type = ASTOperator::MULTIPLY;
+                break;
+            case Token::OP_AND:
+                op_node->operator_type = ASTOperator::AND;
+                break;
+            case Token::OP_LT:
+                op_node->operator_type = ASTOperator::LESS_THAN;
+                break;
+            case Token::OP_EQ:
+                op_node->operator_type = ASTOperator::EQUALS;
+                break;
+            default:
+                printf("Error: Operator type cannot be defined.\n");
+        }
+
+        parent->children.push_back(op_node);
+
+        build_opnd(op_node, expr_node->children[0]);
+        build_opnd(op_node, expr_node->children[2]);
+    }
+}
+
+void AST::build_opnd(ASTNode *parent, Node *opnd_node)
+{
+    ASTNode *wat_node = NULL;
+    switch (opnd_node->children[0]->token.type) {
+        case Token::INTEGER:
+            wat_node = new ASTNode;
+            wat_node->type = ASTNode::CONSTANT;
+            wat_node->value = opnd_node->children[0]->token.str;
+            wat_node->variable_type = ASTVariable::INTEGER;
+            parent->children.push_back(wat_node);
+            break;
+        case Token::STRING:
+            wat_node = new ASTNode;
+            wat_node->type = ASTNode::CONSTANT;
+            wat_node->value = opnd_node->children[0]->token.str;
+            wat_node->variable_type = ASTVariable::STRING;
+            parent->children.push_back(wat_node);
+            break;
+        case Token::IDENTIFIER:
+            wat_node = new ASTNode;
+            wat_node->type = ASTNode::VAR_ID;
+            wat_node->value = opnd_node->children[0]->token.str;
+            wat_node->variable_type = ASTVariable::UNKNOWN;
+            parent->children.push_back(wat_node);
+            break;
+        case Token::BRACKET_LEFT:
+            build_expr(parent, opnd_node->children[1]);
+            break;
+        default:
+            printf("Error: Parse tree incorrect.\n");
+    }
 }
 
 } // namespace mpli
