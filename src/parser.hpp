@@ -15,6 +15,8 @@ class Parser {
 
 		Token _curr_token;
 
+        int _n_errors;
+
         Node *new_node(Node::TYPE type);
         Node *new_token_node(Token token);
         int match(Token::TYPE expected);
@@ -31,9 +33,11 @@ class Parser {
 		void parse_op(Node *parent);
 
     public:
+        Parser();
         ~Parser();
 		void set_scanner(Scanner *scanner);
 		void start();
+        int number_of_errors();
 };
 
 } // namespace mpli

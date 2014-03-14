@@ -210,7 +210,7 @@ Token::TYPE Scanner::get_token_type(std::string str)
             Token::KW_PRINT, Token::KW_INT, Token::KW_STRING, Token::KW_BOOL,
             Token::KW_ASSERT, Token::DOUBLEDOT, Token::COLON, Token::INSERT,
             Token::SEMICOLON, Token::BRACKET_RIGHT, Token::BRACKET_LEFT,
-            Token::OP_ADD, Token::OP_SUBS, Token::OP_DIVIS, Token::OP_NOT,
+            Token::OP_ADD, Token::OP_SUBT, Token::OP_DIVIS, Token::OP_NOT,
             Token::OP_MULT, Token::OP_AND, Token::OP_LT, Token::OP_EQ };
     for (int i=0; i<25; ++i) {
         if (str == predef_strs[i])

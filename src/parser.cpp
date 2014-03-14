@@ -3,10 +3,26 @@
 
 namespace mpli {
 
+Parser::Parser()
+{
+    _root_node = NULL;
+    _n_errors = 0;
+}
+
 Parser::~Parser()
 {
-    /* delete parse tree recursively */
-    delete_node_r(_root_node);
+    if (_root_node) {
+        /* delete parse tree recursively */
+        delete_node_r(_root_node);
+    }
+}
+
+void Parser::delete_node_r(Node *node)
+{
+    for(int i=(node->children.size()-1); i >= 0; --i) {
+        delete_node_r(node->children[i]);
+    }
+    delete node;
 }
 
 Node *Parser::new_node(Node::TYPE type)
@@ -47,6 +63,7 @@ void Parser::parse_child_node(Token::TYPE expected, Node *parent)
 
 void Parser::token_error()
 {
+    _n_errors++;
     if (_curr_token.type == Token::ERROR) {
         printf("Error: cannot resolve token type for token '%s'\n",
                _curr_token.str.c_str());
@@ -56,13 +73,9 @@ void Parser::token_error()
     }
 }
 
-void Parser::delete_node_r(Node *node)
+int Parser::number_of_errors()
 {
-    std::vector<Node*>::iterator it;
-    for(it = node->children.begin(); it != node->children.end(); it++) {
-        delete_node_r((*it));
-    }
-    delete node;
+    return _n_errors;
 }
 
 void Parser::set_scanner(Scanner *scanner)
@@ -72,6 +85,7 @@ void Parser::set_scanner(Scanner *scanner)
 
 void Parser::start()
 {
+    _n_errors = 0;
 	_curr_token = _scanner->next_token();
 	parse_prog();
 }
@@ -185,7 +199,7 @@ void Parser::parse_expr(Node *parent)
 		case Token::BRACKET_LEFT:
 			parse_opnd(expr_node);
 			if (_curr_token.type == Token::OP_ADD || 
-			    _curr_token.type == Token::OP_SUBS ||
+			    _curr_token.type == Token::OP_SUBT ||
 				_curr_token.type == Token::OP_DIVIS ||
 				_curr_token.type == Token::OP_NOT ||
 				_curr_token.type == Token::OP_MULT ||
@@ -258,8 +272,8 @@ void Parser::parse_op(Node *parent)
 		case Token::OP_ADD:
 			parse_child_node(Token::OP_ADD, parent);
 			break;
-		case Token::OP_SUBS:
-			parse_child_node(Token::OP_SUBS, parent);
+		case Token::OP_SUBT:
+			parse_child_node(Token::OP_SUBT, parent);
 			break;
 		case Token::OP_DIVIS:
 			parse_child_node(Token::OP_DIVIS, parent);
