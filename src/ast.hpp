@@ -88,6 +88,7 @@ public:
     void create(Node *root);
     int number_of_errors();
 	void debug_print();
+	ASTNode *root();
 };
 
 } // namespace mpli
