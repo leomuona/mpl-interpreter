@@ -131,15 +131,19 @@ void AST::build_var_init(ASTNode *parent, Node *stmt_node)
     var_init_node->type = ASTNode::VAR_INIT;
     
     ASTVariable::TYPE var_type;
+	Symbol::TYPE s_type;
     switch (stmt_node->children[3]->token.type) {
         case Token::KW_INT:
             var_type = ASTVariable::INTEGER;
+			s_type = Symbol::VARIABLE_INT;
 			break;
         case Token::KW_STRING:
             var_type = ASTVariable::STRING;
+			s_type = Symbol::VARIABLE_STRING;
         	break;
 		case Token::KW_BOOL:
             var_type = ASTVariable::BOOLEAN;
+			s_type = Symbol::VARIABLE_BOOL;
         	break;
 		default:
 			std::string e_str = "AST::build_var_init - Cannot resolve variable type for token type ";
@@ -157,7 +161,7 @@ void AST::build_var_init(ASTNode *parent, Node *stmt_node)
 	
 	/* add id to symbol table */
 	Symbol s;
-	s.type = Symbol::VARIABLE;
+	s.type = s_type;
 	_symbol_table.push(id_node->value, s);
 
     /* set initialization node to be children of parent */
@@ -192,16 +196,31 @@ void AST::build_insert(ASTNode *parent, Node *stmt_node)
     /* identifier node */
     ASTNode *id_node = new ASTNode;
     id_node->type = ASTNode::VAR_ID;
-    id_node->variable_type = ASTVariable::UNKNOWN;
     id_node->value = stmt_node->children[0]->token.str;
-    insert_node->children.push_back(id_node);
-	
-	/* check symbol table */
-	if (_symbol_table.find(id_node->value).type == Symbol::UNDEFINED) {
-		std::string e_str = "AST::build_insert - Identifier ";
-		e_str.append(id_node->value);
-		report_error(e_str.append(" is not initialized."));
+    /* check symbol table */
+	switch (_symbol_table.find(id_node->value).type) {
+		case Symbol::VARIABLE_INT:
+			id_node->variable_type = ASTVariable::INTEGER;
+			break;
+		case Symbol::VARIABLE_STRING:
+			id_node->variable_type = ASTVariable::STRING;
+			break;
+		case Symbol::VARIABLE_BOOL:
+			id_node->variable_type = ASTVariable::BOOL;
+			break;
+		case Symbol::UNDEFINED:
+			id_node->variable_type = ASTVariable::UNKNOWN;
+			std::string e_str1 = "AST::build_insert - Identifier ";
+			e_str1.append(id_node->value);
+			report_error(e_str1.append(" is not initialized."));
+			break;
+		default:
+			id_node->variable_type = ASTVariable::UNKNOWN;
+			std::string e_str1 = "AST::build_insert - Identifier ";
+			e_str1.append(id_node->value);
+			report_error(e_str1.append(" has wrong type information."));
 	}
+	insert_node->children.push_back(id_node);
 
     /* set insert node to be children of parent */ 
     parent->children.push_back(insert_node);
@@ -226,13 +245,30 @@ void AST::build_for_loop(ASTNode *parent, Node *stmt_node)
     ASTNode *id_node = new ASTNode;
     id_node->type = ASTNode::VAR_ID;
     id_node->value = stmt_node->children[1]->token.str;
-    id_node->variable_type = ASTVariable::UNKNOWN;
+	/* check symbol table */
+	switch (_symbol_table.find(id_node->value).type) {
+		case Symbol::VARIABLE_INT:
+			id_node->variable_type = ASTVariable::INTEGER;
+			break;
+		case Symbol::VARIABLE_STRING:
+			id_node->variable_type = ASTVariable::STRING;
+			break;
+		case Symbol::VARIABLE_BOOL:
+			id_node->variable_type = ASTVariable::BOOL;
+			break;
+		case Symbol::UNDEFINED:
+			id_node->variable_type = ASTVariable::UNKNOWN;
+			std::string e_str1 = "AST::build_for_loop - Identifier ";
+			e_str1.append(id_node->value);
+			report_error(e_str1.append(" is not initialized."));
+			break;
+		default:
+			id_node->variable_type = ASTVariable::UNKNOWN;
+			std::string e_str1 = "AST::build_for_loop - Identifier ";
+			e_str1.append(id_node->value);
+			report_error(e_str1.append(" has wrong type information."));
+	}
     in_node->children.push_back(id_node);
-
-	/* put id to symbol table */
-	Symbol s;
-	s.type = Symbol::VARIABLE;
-	_symbol_table.push(id_node->value, s);
 
     /* in : left side expr */
     build_expr(in_node, stmt_node->children[3]);
@@ -246,9 +282,6 @@ void AST::build_for_loop(ASTNode *parent, Node *stmt_node)
 
     /* do : stmts */
     build(do_node, stmt_node->children[7]);
-
-	/* pop id from symbol table */
-	_symbol_table.pop(id_node->value);
 }
 
 void AST::build_read(ASTNode *parent, Node *stmt_node)
@@ -260,16 +293,31 @@ void AST::build_read(ASTNode *parent, Node *stmt_node)
     /* identifier node */
     ASTNode *id_node = new ASTNode;
     id_node->type = ASTNode::VAR_ID;
-    id_node->variable_type = ASTVariable::UNKNOWN;
     id_node->value = stmt_node->children[1]->token.str;
-    read_node->children.push_back(id_node);
-
-	/* check the symbol table for identifier */
-	if (_symbol_table.find(id_node->value).type == Symbol::UNDEFINED) {
-		std::string e_str = "AST::build_read - Identifier ";
-		e_str.append(id_node->value);
-		report_error(e_str.append(" is not initialized."));
+	/* check symbol table */
+	switch (_symbol_table.find(id_node->value).type) {
+		case Symbol::VARIABLE_INT:
+			id_node->variable_type = ASTVariable::INTEGER;
+			break;
+		case Symbol::VARIABLE_STRING:
+			id_node->variable_type = ASTVariable::STRING;
+			break;
+		case Symbol::VARIABLE_BOOL:
+			id_node->variable_type = ASTVariable::BOOL;
+			break;
+		case Symbol::UNDEFINED:
+			id_node->variable_type = ASTVariable::UNKNOWN;
+			std::string e_str1 = "AST::build_read - Identifier ";
+			e_str1.append(id_node->value);
+			report_error(e_str1.append(" is not initialized."));
+			break;
+		default:
+			id_node->variable_type = ASTVariable::UNKNOWN;
+			std::string e_str1 = "AST::build_read - Identifier ";
+			e_str1.append(id_node->value);
+			report_error(e_str1.append(" has wrong type information."));
 	}
+	read_node->children.push_back(id_node);
 
     /* set read node to be children of parent */
     parent->children.push_back(read_node);
@@ -377,15 +425,30 @@ void AST::build_opnd(ASTNode *parent, Node *opnd_node)
             wat_node = new ASTNode;
             wat_node->type = ASTNode::VAR_ID;
             wat_node->value = opnd_node->children[0]->token.str;
-            wat_node->variable_type = ASTVariable::UNKNOWN;
-            parent->children.push_back(wat_node);
-            
-			/* check the symbol table for identifier */
-			if (_symbol_table.find(wat_node->value).type == Symbol::UNDEFINED) {
-				std::string e_str = "AST::build_opnd - Identifier ";
-				e_str.append(wat_node->value);
-				report_error(e_str.append(" is not initialized."));
+            /* check symbol table */
+			switch (_symbol_table.find(wat_node->value).type) {
+				case Symbol::VARIABLE_INT:
+					wat_node->variable_type = ASTVariable::INTEGER;
+					break;
+				case Symbol::VARIABLE_STRING:
+					wat_node->variable_type = ASTVariable::STRING;
+					break;
+				case Symbol::VARIABLE_BOOL:
+					wat_node->variable_type = ASTVariable::BOOLEAN;
+					break;
+				case Symbol::UNDEFINED:
+					wat_node->variable_type = ASTVariable::UNKNOWN;
+					std::string e_str1 = "AST::build_opnd - Identifier ";
+					e_str1.append(wat_node->value);
+					report_error(e_str1.append(" is not initialized."));
+					break;
+				default:
+					wat_node->variable_type = ASTVariable::UNKNOWN;
+					std::string e_str1 = "AST::build_opnd - Identifier ";
+					e_str1.append(wat_node->value);
+					report_error(e_str1.append(" has wrong type information."));
 			}
+			parent->children.push_back(wat_node);
 			break;
         case Token::BRACKET_LEFT:
             build_expr(parent, opnd_node->children[1]);

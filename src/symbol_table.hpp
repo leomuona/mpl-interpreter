@@ -9,7 +9,9 @@ namespace mpli {
 struct Symbol {
 	enum TYPE {
 		UNDEFINED,
-		VARIABLE
+		VARIABLE_INT,
+		VARIABLE_STRING,
+		VARIABLE_BOOL
 	};
 
 	TYPE type;
