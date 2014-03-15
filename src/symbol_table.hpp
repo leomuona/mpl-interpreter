@@ -15,7 +15,8 @@ struct Symbol {
 	};
 
 	TYPE type;
-	
+	/* location in interpreter's <type>_values vector */
+	int location;	
 };
 
 class SymbolTable {
