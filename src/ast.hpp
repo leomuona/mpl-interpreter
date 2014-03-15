@@ -2,6 +2,7 @@
 #define MPLI_AST_HPP_
 
 #include "node.hpp"
+#include "symbol_table.hpp"
 #include <vector>
 #include <string>
 
@@ -62,7 +63,10 @@ struct ASTNode {
 
 class AST {
 private:
+	SymbolTable _symbol_table;
+
     ASTNode *_root;
+	int _number_of_errors;
 
     void build(ASTNode *parent, Node *node);
     void build_stmt(ASTNode *parent, Node *node);
@@ -75,13 +79,15 @@ private:
     void build_expr(ASTNode *parent, Node *expr_node);
     void build_opnd(ASTNode *parent, Node *opnd_node);
 
+	void report_error(std::string str);
     void delete_node_r(ASTNode *node);
 	void debug_print_r(ASTNode *node, int level);
 public:
     AST();
     ~AST();
     void create(Node *root);
-    void debug_print();
+    int number_of_errors();
+	void debug_print();
 };
 
 } // namespace mpli

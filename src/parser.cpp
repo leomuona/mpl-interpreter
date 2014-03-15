@@ -43,7 +43,6 @@ Node *Parser::new_token_node(Token token)
 int Parser::match(Token::TYPE expected)
 {
 	if (_curr_token.type == expected) {
-        printf("Valid token: %d %s\n", _curr_token.type, _curr_token.str.c_str());
 		_curr_token = _scanner->next_token();
 	    return 1;
     } else {
@@ -99,17 +98,11 @@ void Parser::debug_print()
 
 void Parser::debug_print_r(Node *node, int level)
 {
-	const char* nodetypes[] = {
-		"TOKEN",
-		"PROG",
-		"STMTS",
-		"STMT",
-		"EXPR",
-		"OPND"
-		};
-	
-    printf("Node level %d: %s %s\n", level, nodetypes[node->type], node->token.str.c_str());
-	
+	if (node->type == Node::TOKEN) {
+    	printf("DEBUG: Node level %d: %s %s %s\n", level, node->type_str().c_str(), node->token.type_str().c_str(), node->token.str.c_str());
+	} else {
+		printf("DEBUG: Node level %d: %s\n", level, node->type_str().c_str());
+	}
 	for (int i=0; i < node->children.size(); ++i) {
 		debug_print_r(node->children[i], level+1);
 	}

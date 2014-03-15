@@ -17,6 +17,15 @@ struct Token {
 
     Token(TYPE t, std::string s) : type(t), str(s) { }
     Token() { type = ERROR; str = ""; }
+
+	std::string type_str()
+	{
+		const char* types[] = { "IDENTIFIER", "INTEGER", "STRING", "DOUBLEDOT", "COLON", "INSERT", "SEMICOLON",
+                "BRACKET_RIGHT", "BRACKET_LEFT", "OP_ADD", "OP_SUBT", "OP_DIVIS", "OP_NOT",
+                "OP_MULT", "OP_AND", "OP_LT", "OP_EQ", "KW_VAR", "KW_FOR", "KW_END", "KW_IN", "KW_DO", "KW_READ",
+                "KW_PRINT", "KW_INT", "KW_STRING", "KW_BOOL", "KW_ASSERT", "END_OF_FILE", "ERROR" };
+		return std::string(types[type]);
+	}
 };
 
 } // namespace mpli

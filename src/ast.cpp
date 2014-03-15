@@ -6,6 +6,7 @@ namespace mpli {
 
 AST::AST()
 {
+	_number_of_errors = 0;
     _root = NULL;
 }
 
@@ -22,6 +23,17 @@ void AST::delete_node_r(ASTNode *node)
         delete_node_r(node->children[i]);
     }
     delete node;   
+}
+
+void AST::report_error(std::string str)
+{
+	_number_of_errors++;
+	printf("ERROR: %s\n", str.c_str());
+}
+
+int AST::number_of_errors()
+{
+	return _number_of_errors;
 }
 
 void AST::debug_print()
@@ -47,7 +59,7 @@ void AST::debug_print_r(ASTNode *node, int level)
 		"CONSTANT"
 		};
 	
-    printf("ASTNode level %d: %s %s\n", level, nodetypes[node->type], node->value.c_str());
+    printf("DEBUG: ASTNode level %d: %s %s\n", level, nodetypes[node->type], node->value.c_str());
 	
 	for (int i=0; i < node->children.size(); ++i) {
 		debug_print_r(node->children[i], level+1);
@@ -56,7 +68,6 @@ void AST::debug_print_r(ASTNode *node, int level)
 
 void AST::create(Node *root)
 {
-	printf("AST::create\n");
     _root = new ASTNode;
     _root->type = ASTNode::ROOT;
     build(_root, root);    
@@ -64,7 +75,6 @@ void AST::create(Node *root)
 
 void AST::build(ASTNode *parent, Node *node)
 {
-	printf("AST::build\n");
     std::vector<Node*>::iterator it;
     switch (node->type) {
         case Node::PROG:
@@ -82,13 +92,13 @@ void AST::build(ASTNode *parent, Node *node)
                 break;
             }
         default:
-            printf("Error: Invalid parse tree.\n");
+			std::string e_str = "AST::build - Invalid node location in parse tree for node type ";
+            report_error(e_str.append(node->type_str()));
     }
 }
 
 void AST::build_stmt(ASTNode *parent, Node *node)
 {
-	printf("AST::build_stmt\n");
     switch (node->children[0]->token.type) {
         case Token::KW_VAR:
             build_var_init(parent, node);
@@ -109,13 +119,13 @@ void AST::build_stmt(ASTNode *parent, Node *node)
             build_assert(parent, node);
             break;
         default:
-            printf("Error: Invalid parse tree.\n");
+			std::string e_str = "AST::build_stmt - Invalid token node location in parse tree for token type ";
+            report_error(e_str.append(node->children[0]->token.type_str()));
     }
 }
 
 void AST::build_var_init(ASTNode *parent, Node *stmt_node)
 {
-	printf("AST::build_var_init\n");
     /* initialization node */
     ASTNode *var_init_node = new ASTNode;
     var_init_node->type = ASTNode::VAR_INIT;
@@ -132,7 +142,8 @@ void AST::build_var_init(ASTNode *parent, Node *stmt_node)
             var_type = ASTVariable::BOOLEAN;
         	break;
 		default:
-            printf("Error: Cannot resolve variable type %d.\n", stmt_node->children[3]->token.type);
+			std::string e_str = "AST::build_var_init - Cannot resolve variable type for token type ";
+            report_error(e_str.append(stmt_node->children[3]->token.type_str()));
             var_type = ASTVariable::UNKNOWN;
     }
     var_init_node->variable_type = var_type;
@@ -143,7 +154,12 @@ void AST::build_var_init(ASTNode *parent, Node *stmt_node)
     id_node->value = stmt_node->children[1]->token.str;
     id_node->variable_type = var_type;
     var_init_node->children.push_back(id_node);
-   
+	
+	/* add id to symbol table */
+	Symbol s;
+	s.type = Symbol::VARIABLE;
+	_symbol_table.push(id_node->value, s);
+
     /* set initialization node to be children of parent */
     parent->children.push_back(var_init_node);
 
@@ -169,7 +185,6 @@ void AST::build_var_init(ASTNode *parent, Node *stmt_node)
 
 void AST::build_insert(ASTNode *parent, Node *stmt_node)
 {
-	printf("AST::build_insert\n");
     /* insert node */
     ASTNode *insert_node = new ASTNode;
     insert_node->type = ASTNode::INSERT;
@@ -180,7 +195,14 @@ void AST::build_insert(ASTNode *parent, Node *stmt_node)
     id_node->variable_type = ASTVariable::UNKNOWN;
     id_node->value = stmt_node->children[0]->token.str;
     insert_node->children.push_back(id_node);
-   
+	
+	/* check symbol table */
+	if (_symbol_table.find(id_node->value).type == Symbol::UNDEFINED) {
+		std::string e_str = "AST::build_insert - Identifier ";
+		e_str.append(id_node->value);
+		report_error(e_str.append(" is not initialized."));
+	}
+
     /* set insert node to be children of parent */ 
     parent->children.push_back(insert_node);
 
@@ -190,7 +212,6 @@ void AST::build_insert(ASTNode *parent, Node *stmt_node)
 
 void AST::build_for_loop(ASTNode *parent, Node *stmt_node)
 {
-	printf("AST::build_for_loop\n");
     /* for loop node */
     ASTNode *for_node = new ASTNode;
     for_node->type = ASTNode::FOR_LOOP;
@@ -208,6 +229,11 @@ void AST::build_for_loop(ASTNode *parent, Node *stmt_node)
     id_node->variable_type = ASTVariable::UNKNOWN;
     in_node->children.push_back(id_node);
 
+	/* put id to symbol table */
+	Symbol s;
+	s.type = Symbol::VARIABLE;
+	_symbol_table.push(id_node->value, s);
+
     /* in : left side expr */
     build_expr(in_node, stmt_node->children[3]);
     /* in : right side expr */
@@ -220,11 +246,13 @@ void AST::build_for_loop(ASTNode *parent, Node *stmt_node)
 
     /* do : stmts */
     build(do_node, stmt_node->children[7]);
+
+	/* pop id from symbol table */
+	_symbol_table.pop(id_node->value);
 }
 
 void AST::build_read(ASTNode *parent, Node *stmt_node)
 {
-	printf("AST::build_read\n");
     /* read node */
     ASTNode *read_node = new ASTNode;
     read_node->type = ASTNode::READ;
@@ -236,13 +264,19 @@ void AST::build_read(ASTNode *parent, Node *stmt_node)
     id_node->value = stmt_node->children[1]->token.str;
     read_node->children.push_back(id_node);
 
+	/* check the symbol table for identifier */
+	if (_symbol_table.find(id_node->value).type == Symbol::UNDEFINED) {
+		std::string e_str = "AST::build_read - Identifier ";
+		e_str.append(id_node->value);
+		report_error(e_str.append(" is not initialized."));
+	}
+
     /* set read node to be children of parent */
     parent->children.push_back(read_node);
 }
 
 void AST::build_print(ASTNode *parent, Node *stmt_node)
 {
-	printf("AST::build_print\n");
     /* print node */
     ASTNode *print_node = new ASTNode;
     print_node->type = ASTNode::PRINT;
@@ -256,7 +290,6 @@ void AST::build_print(ASTNode *parent, Node *stmt_node)
 
 void AST::build_assert(ASTNode *parent, Node *stmt_node)
 {
-	printf("AST::build_assert\n");
     /* assert node */
     ASTNode *assert_node = new ASTNode;
     assert_node->type = ASTNode::ASSERT;
@@ -270,7 +303,6 @@ void AST::build_assert(ASTNode *parent, Node *stmt_node)
 
 void AST::build_expr(ASTNode *parent, Node *expr_node)
 {
-	printf("AST::build_expr\n");
     if (expr_node->children.size() < 3) {
         /* unary operator */
 		if (expr_node->children[0]->token.type == Token::OP_NOT) {
@@ -312,7 +344,8 @@ void AST::build_expr(ASTNode *parent, Node *expr_node)
                 op_node->operator_type = ASTOperator::EQUALS;
                 break;
             default:
-                printf("Error: Operator type for %d cannot be defined.\n", expr_node->children[1]->token.type);
+				std::string e_str = "AST::build_expr - Cannot define operator type for token type ";
+                report_error(e_str.append(expr_node->children[1]->token.type_str()));
         }
 
         parent->children.push_back(op_node);
@@ -324,7 +357,6 @@ void AST::build_expr(ASTNode *parent, Node *expr_node)
 
 void AST::build_opnd(ASTNode *parent, Node *opnd_node)
 {
-	printf("AST::build_opnd\n");
     ASTNode *wat_node = NULL;
     switch (opnd_node->children[0]->token.type) {
         case Token::INTEGER:
@@ -347,12 +379,21 @@ void AST::build_opnd(ASTNode *parent, Node *opnd_node)
             wat_node->value = opnd_node->children[0]->token.str;
             wat_node->variable_type = ASTVariable::UNKNOWN;
             parent->children.push_back(wat_node);
-            break;
+            
+			/* check the symbol table for identifier */
+			if (_symbol_table.find(wat_node->value).type == Symbol::UNDEFINED) {
+				std::string e_str = "AST::build_opnd - Identifier ";
+				e_str.append(wat_node->value);
+				report_error(e_str.append(" is not initialized."));
+			}
+			break;
         case Token::BRACKET_LEFT:
             build_expr(parent, opnd_node->children[1]);
             break;
         default:
-            printf("Error: Parse tree incorrect.\n");
+			std::string e_str = "AST::build_opnd - Token type ";
+			e_str.append(opnd_node->children[0]->token.type_str());
+			report_error(e_str.append(" is not allowed at this location."));
     }
 }
 
