@@ -6,6 +6,7 @@ namespace mpli {
 
 int Interpreter::execute(AST *ast)
 {
+	printf("INFO: Interpreter::execute - Executing program.\n");
 	ASTNode *root = ast->root();
 	if (!root) {
 		printf("ERROR: Interpreter::execute - AST root is not valid.\n");
@@ -45,7 +46,20 @@ int Interpreter::execute(AST *ast)
 
 int Interpreter::execute_var_init(ASTNode *node)
 {
+	switch (node->children[0]->variable_type) {
+		case ASTVariable::INTEGER:
+			
+			break;
+		case ASTVariable::STRING:
+		
+			break;
+		case ASTVariable::BOOLEAN:
 
+			break;
+		default:
+			printf("ERROR: Interpreter::execute_var_init - Variable type is not valid.\n");
+			return 1;
+	}
 	return 0;
 }
 
