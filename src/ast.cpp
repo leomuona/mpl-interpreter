@@ -26,11 +26,37 @@ void AST::delete_node_r(ASTNode *node)
 
 void AST::debug_print()
 {
-    // TODO: debug print
+	debug_print_r(_root, 1);
+}
+
+void AST::debug_print_r(ASTNode *node, int level)
+{
+	const char* nodetypes[] = {
+		"ROOT",
+		"INSERT",
+		"OPERATOR",
+		"UNARY_OP",
+		"FOR_LOOP",
+		"FOR_IN",
+		"FOR_DO",
+		"READ",
+		"PRINT",
+		"ASSERT",
+		"VAR_ID",
+		"VAR_INIT",
+		"CONSTANT"
+		};
+	
+    printf("ASTNode level %d: %s %s\n", level, nodetypes[node->type], node->value.c_str());
+	
+	for (int i=0; i < node->children.size(); ++i) {
+		debug_print_r(node->children[i], level+1);
+	}
 }
 
 void AST::create(Node *root)
 {
+	printf("AST::create\n");
     _root = new ASTNode;
     _root->type = ASTNode::ROOT;
     build(_root, root);    
@@ -38,6 +64,7 @@ void AST::create(Node *root)
 
 void AST::build(ASTNode *parent, Node *node)
 {
+	printf("AST::build\n");
     std::vector<Node*>::iterator it;
     switch (node->type) {
         case Node::PROG:
@@ -61,6 +88,7 @@ void AST::build(ASTNode *parent, Node *node)
 
 void AST::build_stmt(ASTNode *parent, Node *node)
 {
+	printf("AST::build_stmt\n");
     switch (node->children[0]->token.type) {
         case Token::KW_VAR:
             build_var_init(parent, node);
@@ -87,6 +115,7 @@ void AST::build_stmt(ASTNode *parent, Node *node)
 
 void AST::build_var_init(ASTNode *parent, Node *stmt_node)
 {
+	printf("AST::build_var_init\n");
     /* initialization node */
     ASTNode *var_init_node = new ASTNode;
     var_init_node->type = ASTNode::VAR_INIT;
@@ -95,12 +124,15 @@ void AST::build_var_init(ASTNode *parent, Node *stmt_node)
     switch (stmt_node->children[3]->token.type) {
         case Token::KW_INT:
             var_type = ASTVariable::INTEGER;
+			break;
         case Token::KW_STRING:
             var_type = ASTVariable::STRING;
-        case Token::KW_BOOL:
+        	break;
+		case Token::KW_BOOL:
             var_type = ASTVariable::BOOLEAN;
-        default:
-            printf("Error: Cannot resolve variable type.");
+        	break;
+		default:
+            printf("Error: Cannot resolve variable type %d.\n", stmt_node->children[3]->token.type);
             var_type = ASTVariable::UNKNOWN;
     }
     var_init_node->variable_type = var_type;
@@ -126,6 +158,8 @@ void AST::build_var_init(ASTNode *parent, Node *stmt_node)
         id_node2->value = id_node->value;
         id_node2->variable_type = id_node->variable_type;
         insert_node->children.push_back(id_node2);
+		
+		parent->children.push_back(insert_node);
 
         /* add expr node tree for insert node */
         build_expr(insert_node, stmt_node->children[5]);
@@ -135,6 +169,7 @@ void AST::build_var_init(ASTNode *parent, Node *stmt_node)
 
 void AST::build_insert(ASTNode *parent, Node *stmt_node)
 {
+	printf("AST::build_insert\n");
     /* insert node */
     ASTNode *insert_node = new ASTNode;
     insert_node->type = ASTNode::INSERT;
@@ -155,6 +190,7 @@ void AST::build_insert(ASTNode *parent, Node *stmt_node)
 
 void AST::build_for_loop(ASTNode *parent, Node *stmt_node)
 {
+	printf("AST::build_for_loop\n");
     /* for loop node */
     ASTNode *for_node = new ASTNode;
     for_node->type = ASTNode::FOR_LOOP;
@@ -188,6 +224,7 @@ void AST::build_for_loop(ASTNode *parent, Node *stmt_node)
 
 void AST::build_read(ASTNode *parent, Node *stmt_node)
 {
+	printf("AST::build_read\n");
     /* read node */
     ASTNode *read_node = new ASTNode;
     read_node->type = ASTNode::READ;
@@ -205,6 +242,7 @@ void AST::build_read(ASTNode *parent, Node *stmt_node)
 
 void AST::build_print(ASTNode *parent, Node *stmt_node)
 {
+	printf("AST::build_print\n");
     /* print node */
     ASTNode *print_node = new ASTNode;
     print_node->type = ASTNode::PRINT;
@@ -218,6 +256,7 @@ void AST::build_print(ASTNode *parent, Node *stmt_node)
 
 void AST::build_assert(ASTNode *parent, Node *stmt_node)
 {
+	printf("AST::build_assert\n");
     /* assert node */
     ASTNode *assert_node = new ASTNode;
     assert_node->type = ASTNode::ASSERT;
@@ -231,13 +270,18 @@ void AST::build_assert(ASTNode *parent, Node *stmt_node)
 
 void AST::build_expr(ASTNode *parent, Node *expr_node)
 {
-    if (expr_node->children[0]->token.type == Token::OP_NOT) {
+	printf("AST::build_expr\n");
+    if (expr_node->children.size() < 3) {
         /* unary operator */
-        ASTNode *unary_node = new ASTNode;
-        unary_node->type = ASTNode::UNARY_OP;
-        parent->children.push_back(unary_node);
+		if (expr_node->children[0]->token.type == Token::OP_NOT) {
+			ASTNode *unary_node = new ASTNode;
+			unary_node->type = ASTNode::UNARY_OP;
+			parent->children.push_back(unary_node);
 
-        build_opnd(unary_node, expr_node->children[1]);
+			build_opnd(unary_node, expr_node->children[1]);
+		} else {
+			build_opnd(parent, expr_node->children[0]);
+		}
     } else {
         ASTNode *op_node = new ASTNode;
         op_node->type = ASTNode::OPERATOR;
@@ -268,7 +312,7 @@ void AST::build_expr(ASTNode *parent, Node *expr_node)
                 op_node->operator_type = ASTOperator::EQUALS;
                 break;
             default:
-                printf("Error: Operator type cannot be defined.\n");
+                printf("Error: Operator type for %d cannot be defined.\n", expr_node->children[1]->token.type);
         }
 
         parent->children.push_back(op_node);
@@ -280,6 +324,7 @@ void AST::build_expr(ASTNode *parent, Node *expr_node)
 
 void AST::build_opnd(ASTNode *parent, Node *opnd_node)
 {
+	printf("AST::build_opnd\n");
     ASTNode *wat_node = NULL;
     switch (opnd_node->children[0]->token.type) {
         case Token::INTEGER:

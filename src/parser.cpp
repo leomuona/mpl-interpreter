@@ -83,6 +83,39 @@ void Parser::set_scanner(Scanner *scanner)
 	_scanner = scanner;
 }
 
+void Parser::create_ast(AST *ast)
+{
+	if (_n_errors != 0 || !_root_node) {
+		printf("Error: Cannot create AST when there are errors.\n");
+		return;
+	}
+	ast->create(_root_node);
+}
+
+void Parser::debug_print()
+{
+	debug_print_r(_root_node, 1);
+}
+
+void Parser::debug_print_r(Node *node, int level)
+{
+	const char* nodetypes[] = {
+		"TOKEN",
+		"PROG",
+		"STMTS",
+		"STMT",
+		"EXPR",
+		"OPND"
+		};
+	
+    printf("Node level %d: %s %s\n", level, nodetypes[node->type], node->token.str.c_str());
+	
+	for (int i=0; i < node->children.size(); ++i) {
+		debug_print_r(node->children[i], level+1);
+	}
+
+}
+
 void Parser::start()
 {
     _n_errors = 0;

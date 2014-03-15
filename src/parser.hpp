@@ -4,6 +4,7 @@
 #include "token.hpp"
 #include "node.hpp"
 #include "scanner.hpp"
+#include "ast.hpp"
 
 namespace mpli {
 
@@ -23,6 +24,7 @@ class Parser {
 		void parse_child_node(Token::TYPE expected, Node *parent);
         void token_error();
         void delete_node_r(Node *node);
+		void debug_print_r(Node *node, int level);
 
 		void parse_prog();
 		void parse_stmts(Node *parent);
@@ -38,6 +40,8 @@ class Parser {
 		void set_scanner(Scanner *scanner);
 		void start();
         int number_of_errors();
+		void create_ast(AST *ast);
+		void debug_print();
 };
 
 } // namespace mpli

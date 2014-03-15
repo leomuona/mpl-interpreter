@@ -76,6 +76,7 @@ private:
     void build_opnd(ASTNode *parent, Node *opnd_node);
 
     void delete_node_r(ASTNode *node);
+	void debug_print_r(ASTNode *node, int level);
 public:
     AST();
     ~AST();

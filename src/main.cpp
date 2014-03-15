@@ -1,5 +1,6 @@
 #include "scanner.hpp"
 #include "parser.hpp"
+#include "ast.hpp"
 
 #include <iostream>
 #include <string>
@@ -21,6 +22,14 @@ int main(int argc, char* argv[])
     Parser parser;
     parser.set_scanner(&scanner);
     parser.start();
+	if (parser.number_of_errors() > 0) {
+		std::cout << "Parser found errors. Exiting." << std::endl;
+		return 0;
+	}
+	parser.debug_print();
+	AST ast;
+	parser.create_ast(&ast);
+	ast.debug_print();
 
     std::cout << "Done." << std::endl;
     return 0;
