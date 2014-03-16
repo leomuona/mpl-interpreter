@@ -30,7 +30,8 @@ private:
     /* negative integers to define static token construction states */
     static const int _TOKEN_END_STATE = -1;
     static const int _TOKEN_BREAK_STATE = -2;
-    static const int _TOKEN_ERROR_STATE = -3;
+	static const int _TOKEN_SKIP_STATE = -3;
+	static const int _TOKEN_ERROR_STATE = -4;
 
     std::map<int, std::vector<StateRow> > _states_map;
 

@@ -6,8 +6,6 @@ namespace mpli {
 
 Scanner::Scanner()
 {
-    // TODO: Handle comments // and /* */
-
     /* Constructing states table:
        Must be constructed in a priority order high-low.*/
     /* 0: initial state */
@@ -21,8 +19,9 @@ Scanner::Scanner()
     v0.push_back(StateRow(BRACKET_LEFT, _TOKEN_END_STATE));
     v0.push_back(StateRow(PLUS, _TOKEN_END_STATE));
     v0.push_back(StateRow(MINUS, _TOKEN_END_STATE));
-    v0.push_back(StateRow(SLASH, _TOKEN_END_STATE));
-    v0.push_back(StateRow(EXCLAMATIONM, _TOKEN_END_STATE));
+    //v0.push_back(StateRow(SLASH, _TOKEN_END_STATE));
+    v0.push_back(StateRow(SLASH, 60));
+	v0.push_back(StateRow(EXCLAMATIONM, _TOKEN_END_STATE));
     v0.push_back(StateRow(ASTERISK, _TOKEN_END_STATE));
     v0.push_back(StateRow(AND, _TOKEN_END_STATE));
     v0.push_back(StateRow(QUOTEM, 50));
@@ -68,6 +67,26 @@ Scanner::Scanner()
     std::vector<StateRow> v51;
     v51.push_back(StateRow(NOT_ANY, 50, 1)); /* not not any => any */
     _states_map[51] = v51;
+
+	/* 60: slash: comments section or just divide op */
+	std::vector<StateRow> v60;
+	v60.push_back(StateRow(SLASH, 61));
+	v60.push_back(StateRow(ASTERISK, 62));
+	v60.push_back(StateRow(NOT_ANY, _TOKEN_BREAK_STATE, 1));
+	_states_map[60] = v60;
+	std::vector<StateRow> v61;
+	v61.push_back(StateRow(NEWLINE, _TOKEN_SKIP_STATE));
+	v61.push_back(StateRow(NOT_ANY, 61, 1));
+	_states_map[61] = v61;
+	std::vector<StateRow> v62;
+	v62.push_back(StateRow(ASTERISK, 63));
+	v62.push_back(StateRow(NOT_ANY, 62, 1));
+	_states_map[62] = v62;
+	std::vector<StateRow> v63;
+	v63.push_back(StateRow(SLASH, _TOKEN_SKIP_STATE));
+	v63.push_back(StateRow(ASTERISK, 63));
+	v63.push_back(StateRow(NOT_ANY, 62, 1));
+	_states_map[63] = v63;
 
 }
 
@@ -186,7 +205,17 @@ Token Scanner::run_automaton(std::string *strbuffer)
         if (curr_state >= 0 || curr_state == _TOKEN_END_STATE) {
             _input_file.get(curr_c);
             strbuffer->push_back(curr_c);
-        }
+        } else if (curr_state == _TOKEN_SKIP_STATE) {
+			/* skip token -> clear buffer, set state to 0, get rid of possible whitespace */
+			_input_file.get(curr_c);
+			peek_c = _input_file.peek();
+			strbuffer->clear();
+			curr_state = 0;
+			while(is_whitespace(peek_c) && _input_file.good()) {
+				_input_file.get(curr_c);
+				peek_c = _input_file.peek();
+			}
+		}
     }    
     
     /* if buffer is empty, it means first char is invalid token */
