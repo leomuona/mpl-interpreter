@@ -114,7 +114,7 @@ int Interpreter::execute_insert(ASTNode *node)
 			_bool_values[s.location] = calc_unary_op(node->children[1]);
 			break;
 		case ASTNode::VAR_ID:
-			s2 = _symbol_table.find(node->choldren[1]->value);
+			s2 = _symbol_table.find(node->children[1]->value);
 			if (s.type != s2.type) {
 				printf("ERROR: Interpreter::execute_insert - Identifier type miss match for identifiers %s and %s.\n",
 					node->children[0]->value.c_str(), node->children[1]->value.c_str());
@@ -176,6 +176,39 @@ int Interpreter::execute_print(ASTNode *node)
 
 int Interpreter::execute_assert(ASTNode *node)
 {
+	int fail = 0;
+	Symbol s;
+	switch (node->children[0]->type) {
+		case ASTNode::UNARY_OP:
+			if (! calc_unary_op(node->children[0])) {
+				fail = 1;
+			}
+			break;
+		case ASTNode::OPERATOR:
+			if (! bool_calc_op(node->children[0])) {
+				fail = 1;
+			}
+			break;
+		case ASTNode::VAR_ID:
+			s = _symbol_table.find(node->children[0]->value);
+			if (s.type != Symbol::VARIABLE_BOOL) {
+				printf("ERROR: Interpreter::execute_assert - %s is non-bool identifier or identifier not initialized.\n",
+					node->children[0]->value.c_str());
+				return 1;
+			}
+			if (! _bool_values[s.location]) {
+				fail = 1;
+			}
+			break;
+		default:
+			printf("ERROR: Interpreter::execute_assert - Assert statement is not valid.\n");
+			return 1;
+	}
+
+	if (fail) {
+		printf("ERROR: Interpreter::execute_assert - Assert returned false. Cannot continue.\n");
+		return 1;
+	}
 
 	return 0;
 }
@@ -393,9 +426,10 @@ int Interpreter::bool_for_op(ASTNode *node)
 	return result;
 }
 
-ASTVariable::TYPE Interpreter::op_var_typing(Node *node)
+ASTVariable::TYPE Interpreter::op_var_typing(ASTNode *node)
 {
 	ASTVariable::TYPE t = ASTVariable::UNKNOWN;
+	ASTNode *n = node;
 	switch (node->children[0]->type) {
 		case ASTNode::OPERATOR:
 			n = node->children[0]->children[0];

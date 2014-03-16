@@ -31,7 +31,7 @@ class Interpreter {
 		int int_for_op(ASTNode *node);
 		std::string string_for_op(ASTNode *node);
 		int bool_for_op(ASTNode *node);
-		ASTVariable::TYPE op_var_typing(Node *node);
+		ASTVariable::TYPE op_var_typing(ASTNode *node);
 
 		int to_int(std::string str);
 		std::string to_string(int val);
