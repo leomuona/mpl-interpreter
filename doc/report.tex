@@ -97,9 +97,9 @@ Parser's start()-function calls scanner's next\_token()-function as many times a
 Scanner creates tokens via state automaton. In Scanner's constructor, a map of state arrays are initialized that has the movement information between states. In a list below are token types as a list and how they are constructed. Some of them are not in state automaton, as token type is defined later by comparison.
 
 \begin{itemize}
-	\item IDENTIFIER: automaton: <alphabetical> ( <alpha>|<numeric>|'\_' )*
-	\item INTEGER: automaton: <numeric> ( <numeric> )*
-	\item STRING: automaton: '"' ( <any> )* '"'
+	\item IDENTIFIER: automaton: $<$alphabetical$>$ ( $<$alpha$>$ $|$ $<$numeric$>$ $|$ '\_' )*
+	\item INTEGER: automaton: $<$numeric$>$ ( $<$numeric$>$ )*
+	\item STRING: automaton: '"' ( $<$any$>$ )* '"'
 	\item DOUBLEDOT: automaton: '.' '.'
 	\item COLON: automaton: ':'
 	\item INSERT: automaton: ':' '='
@@ -112,7 +112,7 @@ Scanner creates tokens via state automaton. In Scanner's constructor, a map of s
 	\item OP\_NOT: automaton: '!'
 	\item OP\_MULT: automaton: '*'
 	\item OP\_AND: automaton: '\&'
-	\item OP\_LT: automaton: '<'
+	\item OP\_LT: automaton: '$<$'
 	\item OP\_EQ: automaton: '='
 	\item KW\_VAR: check if IDENTIFIER is keyword.
 	\item KW\_FOR: check if IDENTIFIER is keyword.
@@ -160,9 +160,9 @@ Parser uses the default context-free grammar that was defined by the original as
               "print" | "int" | "string" | "bool" | "assert"
 \end{lstlisting}
 
-However, there are some limitations to this. <op> stands for operators '+', '-', '*', '/', '<', '=', '\&' and '!'. However integers have only following operators allowed: '+', '-', '*', '/', '<', '=' and '!'. String values have only the following operators allowed: '+', '=' and '!'. Boolean values have only '\&' and '!' allowed.
+However, there are some limitations to this. $<$op$>$ stands for operators '+', '-', '*', '/', '$<$', '=', '\&' and '!'. However integers have only following operators allowed: '+', '-', '*', '/', '$<$', '=' and '!'. String values have only the following operators allowed: '+', '=' and '!'. Boolean values have only '\&' and '!' allowed.
 
-For <unary\_op> (which is '!'), only boolean value may follow it. Boolean values are produced either by '<', '=' and '!' operators or bool variables. String values can be appended with integer values by using '+' with string value as left-side operator.
+For $<$unary\_op$>$ (which is '!'), only boolean value may follow it. Boolean values are produced either by '$<$', '=' and '!' operators or bool variables. String values can be appended with integer values by using '+' with string value as left-side operator.
 
 There is a limitation to read statement, in which you cannot set a boolean value with read. A limitation to for statement is also applied in which you must have integer values as range. Also, analysis insists that variable used in for-in loop is defined as integer.
 
@@ -240,15 +240,16 @@ For completeness, include the original project definition and the Mini-PL specif
 
 The final delivery is due at 23 o'clock (11 p.m.) on Sunday 16th of March. After the appointed deadline, the maximum points to be gained for a delivered work diminishes linearly, decreasing two (2) points per each hour late.
 The work should be returned to the exercise assistant via e-mail, in a zip form. This zip (included in the e-mail message) should contain all relevant files, within a directory that is named according to your unique department user name. The deliverable zip file must contain (at least) the following subfolders.
-
+\begin{lstlisting}
   <username>
     ./doc
     ./src 
+\end{lstlisting}
 When naming your document (.pdf) and project (.zip) files, always include your CS user name and the packaging date. These constitute nice unique names that help to identify the files later. Names would be then something like: 
- 
-   document:  laster\_doc\_2013\_11\_4.pdf 
-   project zip: laster\_proj\_2013\_11\_4.zip
-
+\begin{lstlisting}
+   document:  laster_doc_2013_11_4.pdf 
+   project zip: laster_proj_2013_11_4.zip
+\end{lstlisting}
 More detailed instructions and the requirements for the assignment are given in the exercise group. If you have questions about the folder structure and the ways of delivery, or in case you have questions about the whole project or its requirements, please contact the teaching assistant (Zach Laster).
 
 \newpage
@@ -293,11 +294,11 @@ The syntax definition is given in so-called Extended Backus-Naur form (EBNF). In
    \end{lstlisting}          
 \subsection{Lexical issues}
 
-In the syntax definition the symbol <ident> stands for an identifier token. An identifier is a sequence of letters, digits, and underscores, starting with a letter. Uppercase letters are distinguished from lowercase.
+In the syntax definition the symbol $<$ident$>$ stands for an identifier token. An identifier is a sequence of letters, digits, and underscores, starting with a letter. Uppercase letters are distinguished from lowercase.
  
-In the syntax definition the symbol <int> stands for an integer constant. An integer constant is a sequence of decimal digits. The symbol <string> stands for a string literal. String literals follow the C-style convention: any special characters, such as the quote character (") or backslash (\\), are represented as escape characters (e.g.: \\"). 
+In the syntax definition the symbol $<$int$>$ stands for an integer constant. An integer constant is a sequence of decimal digits. The symbol $<$string$>$ stands for a string literal. String literals follow the C-style convention: any special characters, such as the quote character (") or backslash (\textbackslash), are represented as escape characters (e.g.: \textbackslash"). 
  
-In the syntax definition the symbol <op> stands for an operator symbol. A limited set of binary operators include (only!) the ones listed below. 
+In the syntax definition the symbol $<$op$>$ stands for an operator symbol. A limited set of binary operators include (only!) the ones listed below. 
  \begin{lstlisting}
 '+' | '-' | '*' | '/' | '<' | '=' | & | '!'. 
  \end{lstlisting}
