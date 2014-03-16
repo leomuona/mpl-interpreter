@@ -8,7 +8,6 @@ namespace mpli {
 
 int Interpreter::execute(AST *ast)
 {
-	printf("\nINFO: Interpreter::execute - Executing program.\n");
 	ASTNode *root = ast->root();
 	if (!root) {
 		printf("\nERROR: Interpreter::execute - AST root is not valid.\n");

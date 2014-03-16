@@ -7,6 +7,9 @@
 
 namespace mpli {
 
+/*
+ * Node structure for parse tree. Uses also Token struct.
+ */
 struct Node {
 
     enum TYPE { TOKEN, PROG, STMTS, STMT, EXPR, OPND };

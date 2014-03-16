@@ -19,12 +19,20 @@ struct Symbol {
 	int location;	
 };
 
+/* 
+ * Symbol table that is used by AST and Interpreter.
+ */
 class SymbolTable {
 private:
 	std::map<std::string, Symbol> _symbols;
 public:
+	/* push symbol into symbol table */
 	void push(std::string key, Symbol symbol);
+	/* remove symbol from symbol table */
 	void pop(std::string key);
+	/* Find symbol from symbol table.
+	 * Returns a symbol with type UNDEFINED if not found.
+	 */
 	Symbol find(std::string key);
 };
 

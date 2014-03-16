@@ -1,3 +1,7 @@
+/* set this to 1 to enable debug mode */
+#define DEBUG_MPLI 0
+
+
 #include "scanner.hpp"
 #include "parser.hpp"
 #include "ast.hpp"
@@ -27,7 +31,8 @@ int main(int argc, char* argv[])
 		std::cout << "Parser found errors. Exiting." << std::endl;
 		return 0;
 	}
-	parser.debug_print();
+	if (DEBUG_MPLI) 
+		parser.debug_print();
 	
 	AST ast;
 	parser.create_ast(&ast);
@@ -35,7 +40,8 @@ int main(int argc, char* argv[])
 		std::cout << "Errors when constructing AST. Exiting." << std::endl;
 		return 0;
 	}
-	ast.debug_print();
+	if (DEBUG_MPLI)
+		ast.debug_print();
 
 	Interpreter interpreter;
 	std::cout << "Running interpreter." << std::endl;

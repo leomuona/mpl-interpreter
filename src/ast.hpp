@@ -61,6 +61,9 @@ struct ASTNode {
     ASTVariable::TYPE variable_type;
 };
 
+/*
+ * Abstract Syntax Tree.
+ */
 class AST {
 private:
 	SymbolTable _symbol_table;
@@ -68,6 +71,7 @@ private:
     ASTNode *_root;
 	int _number_of_errors;
 
+	/* black magic, magical numbers and ugly code */
     void build(ASTNode *parent, Node *node);
     void build_stmt(ASTNode *parent, Node *node);
     void build_var_init(ASTNode *parent, Node *stmt_node);
@@ -79,15 +83,22 @@ private:
     void build_expr(ASTNode *parent, Node *expr_node);
     void build_opnd(ASTNode *parent, Node *opnd_node);
 
+	/* utility functions */
 	void report_error(std::string str);
     void delete_node_r(ASTNode *node);
 	void debug_print_r(ASTNode *node, int level);
 public:
     AST();
     ~AST();
+	/* Create AST from parse tree created by Parser.
+	 * Note: Changes in parse tree constructions probably breaks this.
+	 */
     void create(Node *root);
-    int number_of_errors();
+    /* Get number of errors. */
+	int number_of_errors();
+	/* Debug print AST with level information. */
 	void debug_print();
+	/* Get AST's root node. Please do not abuse this to change AST. */
 	ASTNode *root();
 };
 

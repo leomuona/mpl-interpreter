@@ -5,6 +5,9 @@
 
 namespace mpli {
 
+/*
+ * Define Token struct that is used in token stream and parse tree.
+ */
 struct Token {
     
     enum TYPE { IDENTIFIER, INTEGER, STRING, DOUBLEDOT, COLON, INSERT, SEMICOLON,

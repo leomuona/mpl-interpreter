@@ -8,6 +8,9 @@
 
 namespace mpli {
 
+/*
+ * Interpreter to run AST.
+ */
 class Interpreter {
 	private:
 		SymbolTable _symbol_table;
@@ -23,19 +26,23 @@ class Interpreter {
 		int execute_print(ASTNode *node);
 		int execute_assert(ASTNode *node);
 
+		/* Operator calculation functions */
 		int int_calc_op(ASTNode *node);
 		std::string string_calc_op(ASTNode *node);
 		int bool_calc_op(ASTNode *node);
 		int calc_unary_op(ASTNode *node);
 
+		/* Operator left- and right-side parameter helper functions. */
 		int int_for_op(ASTNode *node);
 		std::string string_for_op(ASTNode *node);
 		int bool_for_op(ASTNode *node);
 		ASTVariable::TYPE op_var_typing(ASTNode *node);
 
+		/* typecast functions */
 		int to_int(std::string str);
 		std::string to_string(int val);
 	public:
+		/* Execute given AST. */
 		int execute(AST *ast);
 };
 
