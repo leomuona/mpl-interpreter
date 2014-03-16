@@ -64,11 +64,11 @@ void Parser::token_error()
 {
     _n_errors++;
     if (_curr_token.type == Token::ERROR) {
-        printf("ERROR: Parser - cannot resolve token type for token '%s'\n",
-               _curr_token.str.c_str());
+        printf("ERROR: Parser - cannot resolve token type for token '%s' %s\n",
+               _curr_token.str.c_str(), _curr_token.type_str().c_str());
     } else {
-        printf("ERROR: Parser - '%s' is not a valid token for this location.\n", 
-               _curr_token.str.c_str());
+        printf("ERROR: Parser - '%s' %s is not a valid token for this location.\n", 
+               _curr_token.str.c_str(), _curr_token.type_str().c_str());
     }
 }
 
