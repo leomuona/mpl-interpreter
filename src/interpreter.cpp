@@ -1,6 +1,7 @@
 #include "interpreter.hpp"
 
 #include <cstdio>
+#include <iostream>
 #include <stdexcept>
 
 namespace mpli {
@@ -158,12 +159,133 @@ int Interpreter::execute_insert(ASTNode *node)
 
 int Interpreter::execute_for_loop(ASTNode *node)
 {
+	int start = 0, end = 0;
+
+	/* in_node */
+	ASTNode *in_node = node->children[0];
+	Symbol s = _symbol_table.find(in_node->children[0]->value);
+	if (s.type != Symbol::VARIABLE_INT) {
+		printf("ERROR: Interpreter::execute_for_loop - Identifier %s not found or wrong typing.\n",
+			in_node->children[0]->value.c_str());
+		return 1;
+	}
+	/* start */
+	Symbol s2;
+	switch (in_node->children[1]->type) {
+		case ASTNode::OPERATOR:
+			start = int_calc_op(in_node->children[1]);			
+			break;
+		case ASTNode::VAR_ID:
+			s2 = _symbol_table.find(in_node->children[1]->value);
+			if (s2.type != Symbol::VARIABLE_INT) {
+				printf("ERROR: Interpreter::execute_for_loop - Identifier %s not found or wrong typing.\n",
+					in_node->children[1]->value.c_str());
+			}
+			start = _int_values[s2.location];
+			break;
+		case ASTNode::CONSTANT:
+			start = to_int(in_node->children[1]->value);
+			break;
+		default:
+			printf("ERROR: Interpreter::execute_for_loop - Invalid range type for FOR_LOOP.\n");
+			return 1;
+	}
+	/* end */
+	switch (in_node->children[2]->type) {
+		case ASTNode::OPERATOR:
+			end = int_calc_op(in_node->children[2]);			
+			break;
+		case ASTNode::VAR_ID:
+			s2 = _symbol_table.find(in_node->children[2]->value);
+			if (s2.type != Symbol::VARIABLE_INT) {
+				printf("ERROR: Interpreter::execute_for_loop - Identifier %s not found or wrong typing.\n",
+					in_node->children[2]->value.c_str());
+			}
+			end = _int_values[s2.location];
+			break;
+		case ASTNode::CONSTANT:
+			end = to_int(in_node->children[2]->value);
+			break;
+		default:
+			printf("ERROR: Interpreter::execute_for_loop - Invalid range type for FOR_LOOP.\n");
+			return 1;
+	}
+
+	if (end < start) {
+		printf("ERROR: Interpreter::execute_for_loop - Invalid range defined %d..%d\n", start, end);
+		return 1;
+	}
+
+	/* DO-PART */
+	ASTNode *do_node = node->children[1];
+	int r = 0;
+
+	/* EXECUTE */
+	for(int i=start; i <= end; ++i) {
+		/* set identifier value */
+		_int_values[s.location] = i;
+
+		for (int i=0; i < do_node->children.size(); ++i) {
+			if (r != 0) {
+				/* error -> exit with error code */
+				return r;
+			}
+			switch (do_node->children[i]->type) {
+				case ASTNode::INSERT:
+					r = execute_insert(do_node->children[i]);
+					break;
+				case ASTNode::FOR_LOOP:
+					r = execute_for_loop(do_node->children[i]);
+					break;
+				case ASTNode::VAR_INIT:
+					r = execute_var_init(do_node->children[i]);
+					break;
+				case ASTNode::READ:
+					r = execute_read(do_node->children[i]);
+					break;
+				case ASTNode::PRINT:
+					r = execute_print(do_node->children[i]);
+					break;
+				case ASTNode::ASSERT:
+					r = execute_assert(do_node->children[i]);
+					break;
+				default:
+					printf("ERROR: Interpreter::execute_for_loop - Invalid statement.\n");
+					r = 1;
+			}
+		}
+	}
 
 	return 0;
 }
 
 int Interpreter::execute_read(ASTNode *node)
 {
+	if (node->children[0]->type != ASTNode::VAR_ID) {
+		printf("ERROR: Interpreter::execute_read - Invalid read statement.\n");
+		return 1;
+	}
+	Symbol s = _symbol_table.find(node->children[0]->value);
+	
+	int i;
+	std::string str;
+	switch (s.type) {
+		case Symbol::VARIABLE_INT:
+			std::cin >> i;
+			_int_values[s.location] = i;
+			break;
+		case Symbol::VARIABLE_STRING:
+			std::cin >> str;
+			_string_values[s.location] = str;
+			break;
+		case Symbol::VARIABLE_BOOL:
+			printf("ERROR: Interpreter::execute_read - Boolean type identifier cannot be used in read statement.\n");
+			return 1;
+			break;
+		default:
+			printf("ERROR: Interpreter::execute_read - Identifier %s not initialized.\n", node->children[0]->value.c_str());
+			return 1;
+	}
 
 	return 0;
 }
