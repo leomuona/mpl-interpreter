@@ -22,6 +22,19 @@ class Interpreter {
 		int execute_read(ASTNode *node);
 		int execute_print(ASTNode *node);
 		int execute_assert(ASTNode *node);
+
+		int int_calc_op(ASTNode *node);
+		std::string string_calc_op(ASTNode *node);
+		int bool_calc_op(ASTNode *node);
+		int calc_unary_op(ASTNode *node);
+
+		int int_for_op(ASTNode *node);
+		std::string string_for_op(ASTNode *node);
+		int bool_for_op(ASTNode *node);
+		ASTVariable::TYPE op_var_typing(Node *node);
+
+		int to_int(std::string str);
+		std::string to_string(int val);
 	public:
 		int execute(AST *ast);
 };
