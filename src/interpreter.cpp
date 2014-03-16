@@ -170,6 +170,67 @@ int Interpreter::execute_read(ASTNode *node)
 
 int Interpreter::execute_print(ASTNode *node)
 {
+	Symbol s;
+	ASTVariable::TYPE t = ASTVariable::UNKNOWN;
+	switch (node->children[0]->type) {
+		case ASTNode::UNARY_OP:
+			if (calc_unary_op(node->children[0])) {
+				printf("true");
+			} else {
+				printf("false");
+			}
+			break;
+		case ASTNode::OPERATOR:
+			t = op_var_typing(node->children[0]);
+			switch (t) {
+				case ASTVariable::INTEGER:
+					printf("%d", int_calc_op(node->children[0]));
+					break;
+				case ASTVariable::STRING:
+					printf("%s", string_calc_op(node->children[0]).c_str());
+					break;
+				case ASTVariable::BOOLEAN:
+					if (bool_calc_op(node->children[0])) {
+						printf("true");
+					} else {
+						printf("false");
+					}
+					break;
+				default:
+					printf("ERROR: Interpreter::execute_print - Could not define typing for operator.\n");
+					return 1;
+			}
+
+			break;
+		case ASTNode::VAR_ID:
+			s = _symbol_table.find(node->children[0]->value);
+			switch (s.type) {
+				case Symbol::VARIABLE_INT:
+					printf("%d", _int_values[s.location]);
+					break;
+				case Symbol::VARIABLE_STRING:
+					printf("%s", _string_values[s.location].c_str());
+					break;
+				case Symbol::VARIABLE_BOOL:
+					if (_bool_values[s.location]) {
+						printf("true");
+					} else {
+						printf("false");
+					}
+					break;
+				default:
+					printf("ERROR: Interpreter::execute_print - Identifier %s is not initialized.\n",
+						node->children[0]->value.c_str());
+					return 1;
+			}
+			break;
+		case ASTNode::CONSTANT:
+			printf("%s", node->children[0]->value.c_str());
+			break;
+		default:
+			printf("ERROR: Interpreter::execute_print - Invalid print statement.\n");
+			return 1;
+	}
 
 	return 0;
 }
@@ -372,17 +433,24 @@ std::string Interpreter::string_for_op(ASTNode *node)
 			break;
 		case ASTNode::VAR_ID:
 			s = _symbol_table.find(node->value);
-			if (s.type != Symbol::VARIABLE_INT
-				&& s.type != Symbol::VARIABLE_STRING) {
-				e_str = "Identifier ";
-				e_str.append(node->value);
-				e_str.append(" not found or has wrong typing.");
-				throw std::invalid_argument(e_str.c_str());
-			}
-			if (s.type == Symbol::VARIABLE_STRING) {
-				result = _string_values[s.location];
-			} else {
-				result = to_string(_int_values[s.location]);
+			switch (s.type) {
+				case Symbol::VARIABLE_STRING:
+					result = _string_values[s.location];
+					break;
+				case Symbol::VARIABLE_INT:
+					result = to_string(_int_values[s.location]);
+					break;
+				case Symbol::VARIABLE_BOOL:
+					if (_bool_values[s.location]) {
+						result = "true";
+					} else {
+						result = "false";
+					}
+				default:
+					e_str = "Identifier ";
+					e_str.append(node->value);
+					e_str.append(" not found.");
+					throw std::invalid_argument(e_str.c_str());
 			}
 			break;
 		case ASTNode::CONSTANT:
