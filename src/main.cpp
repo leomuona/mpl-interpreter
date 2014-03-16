@@ -33,12 +33,16 @@ int main(int argc, char* argv[])
 	parser.create_ast(&ast);
 	if (ast.number_of_errors() > 0 ) {
 		std::cout << "Errors when constructing AST. Exiting." << std::endl;
+		return 0;
 	}
 	ast.debug_print();
 
 	Interpreter interpreter;
 	std::cout << "Running interpreter." << std::endl;
 	int r = interpreter.execute(&ast);
+	if (r != 0) {
+		std::cout << "Errors in interpreter. Exiting." << std::endl;
+	}
 
     std::cout << std::endl << "Done." << std::endl;
     return 0;

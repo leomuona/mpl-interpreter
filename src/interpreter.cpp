@@ -8,10 +8,10 @@ namespace mpli {
 
 int Interpreter::execute(AST *ast)
 {
-	printf("INFO: Interpreter::execute - Executing program.\n");
+	printf("\nINFO: Interpreter::execute - Executing program.\n");
 	ASTNode *root = ast->root();
 	if (!root) {
-		printf("ERROR: Interpreter::execute - AST root is not valid.\n");
+		printf("\nERROR: Interpreter::execute - AST root is not valid.\n");
 	}
 	int r = 0;
 	for (int i=0; i < root->children.size(); ++i) {
@@ -39,7 +39,7 @@ int Interpreter::execute(AST *ast)
 				r = execute_assert(root->children[i]);
 				break;
 			default:
-				printf("ERROR: Interpreter::execute - AST root's child is not valid.\n");
+				printf("\nERROR: Interpreter::execute - AST root's child is not valid.\n");
 				r = 1;
 		}
 	}
@@ -49,7 +49,7 @@ int Interpreter::execute(AST *ast)
 int Interpreter::execute_var_init(ASTNode *node)
 {
 	if (_symbol_table.find(node->children[0]->value).type != Symbol::UNDEFINED) {
-		printf("ERROR: Interpreter::execute_var_init - Identifier %s is already initialized.\n", node->children[0]->value.c_str());
+		printf("\nERROR: Interpreter::execute_var_init - Identifier %s is already initialized.\n", node->children[0]->value.c_str());
 		return 1;
 	}
 
@@ -74,7 +74,7 @@ int Interpreter::execute_var_init(ASTNode *node)
 			_symbol_table.push(node->children[0]->value, s);
 			break;
 		default:
-			printf("ERROR: Interpreter::execute_var_init - Variable type is not valid.\n");
+			printf("\nERROR: Interpreter::execute_var_init - Variable type is not valid.\n");
 			return 1;
 	}
 	return 0;
@@ -85,7 +85,7 @@ int Interpreter::execute_insert(ASTNode *node)
 	/* children[0] == id_node */
 	Symbol s = _symbol_table.find(node->children[0]->value);
 	if (s.type == Symbol::UNDEFINED) {
-		printf("ERROR: Interpreter::execute_insert - Identifier %s is not initialized.\n", node->children[0]->value.c_str());
+		printf("\nERROR: Interpreter::execute_insert - Identifier %s is not initialized.\n", node->children[0]->value.c_str());
 		return 1;
 	}
 
@@ -103,13 +103,13 @@ int Interpreter::execute_insert(ASTNode *node)
 					_bool_values[s.location] = bool_calc_op(node->children[1]);
 					break;
 				default:
-					printf("ERROR: Interpreter::execute_insert - Identifier typing error.\n");
+					printf("\nERROR: Interpreter::execute_insert - Identifier typing error.\n");
 					return 1;
 			}
 			break;
 		case ASTNode::UNARY_OP:
 			if (s.type != Symbol::VARIABLE_BOOL) {
-				printf("ERROR: Interpreter::execute_insert - Unary operator '!' for non-boolean variable is not allowed.\n");
+				printf("\nERROR: Interpreter::execute_insert - Unary operator '!' for non-boolean variable is not allowed.\n");
 				return 1;
 			}
 			_bool_values[s.location] = calc_unary_op(node->children[1]);
@@ -117,7 +117,7 @@ int Interpreter::execute_insert(ASTNode *node)
 		case ASTNode::VAR_ID:
 			s2 = _symbol_table.find(node->children[1]->value);
 			if (s.type != s2.type) {
-				printf("ERROR: Interpreter::execute_insert - Identifier type miss match for identifiers %s and %s.\n",
+				printf("\nERROR: Interpreter::execute_insert - Identifier type miss match for identifiers %s and %s.\n",
 					node->children[0]->value.c_str(), node->children[1]->value.c_str());
 				return 1;
 			}
@@ -132,7 +132,7 @@ int Interpreter::execute_insert(ASTNode *node)
 					_bool_values[s.location] = _bool_values[s2.location];
 					break;
 				default:
-					printf("ERROR: Interpreter::execute_insert - Identifier typing error.\n");
+					printf("\nERROR: Interpreter::execute_insert - Identifier typing error.\n");
 					return 1;
 			}
 			break;
@@ -145,12 +145,12 @@ int Interpreter::execute_insert(ASTNode *node)
 					_string_values[s.location] = node->children[1]->value;
 					break;
 				default:
-					printf("ERROR: Interpreter::execute_insert - Cannot insert constant into bool value.\n");
+					printf("\nERROR: Interpreter::execute_insert - Cannot insert constant into bool value.\n");
 					return 1;
 			}
 			break;
 		default:
-			printf("ERROR: Interpereter::execute_var_init - Insert statement is not valid.\n");
+			printf("\nERROR: Interpereter::execute_var_init - Insert statement is not valid.\n");
 			return 1;
 	}
 
@@ -165,7 +165,7 @@ int Interpreter::execute_for_loop(ASTNode *node)
 	ASTNode *in_node = node->children[0];
 	Symbol s = _symbol_table.find(in_node->children[0]->value);
 	if (s.type != Symbol::VARIABLE_INT) {
-		printf("ERROR: Interpreter::execute_for_loop - Identifier %s not found or wrong typing.\n",
+		printf("\nERROR: Interpreter::execute_for_loop - Identifier %s not found or wrong typing.\n",
 			in_node->children[0]->value.c_str());
 		return 1;
 	}
@@ -178,7 +178,7 @@ int Interpreter::execute_for_loop(ASTNode *node)
 		case ASTNode::VAR_ID:
 			s2 = _symbol_table.find(in_node->children[1]->value);
 			if (s2.type != Symbol::VARIABLE_INT) {
-				printf("ERROR: Interpreter::execute_for_loop - Identifier %s not found or wrong typing.\n",
+				printf("\nERROR: Interpreter::execute_for_loop - Identifier %s not found or wrong typing.\n",
 					in_node->children[1]->value.c_str());
 			}
 			start = _int_values[s2.location];
@@ -187,7 +187,7 @@ int Interpreter::execute_for_loop(ASTNode *node)
 			start = to_int(in_node->children[1]->value);
 			break;
 		default:
-			printf("ERROR: Interpreter::execute_for_loop - Invalid range type for FOR_LOOP.\n");
+			printf("\nERROR: Interpreter::execute_for_loop - Invalid range type for FOR_LOOP.\n");
 			return 1;
 	}
 	/* end */
@@ -198,7 +198,7 @@ int Interpreter::execute_for_loop(ASTNode *node)
 		case ASTNode::VAR_ID:
 			s2 = _symbol_table.find(in_node->children[2]->value);
 			if (s2.type != Symbol::VARIABLE_INT) {
-				printf("ERROR: Interpreter::execute_for_loop - Identifier %s not found or wrong typing.\n",
+				printf("\nERROR: Interpreter::execute_for_loop - Identifier %s not found or wrong typing.\n",
 					in_node->children[2]->value.c_str());
 			}
 			end = _int_values[s2.location];
@@ -207,12 +207,12 @@ int Interpreter::execute_for_loop(ASTNode *node)
 			end = to_int(in_node->children[2]->value);
 			break;
 		default:
-			printf("ERROR: Interpreter::execute_for_loop - Invalid range type for FOR_LOOP.\n");
+			printf("\nERROR: Interpreter::execute_for_loop - Invalid range type for FOR_LOOP.\n");
 			return 1;
 	}
 
 	if (end < start) {
-		printf("ERROR: Interpreter::execute_for_loop - Invalid range defined %d..%d\n", start, end);
+		printf("\nERROR: Interpreter::execute_for_loop - Invalid range defined %d..%d\n", start, end);
 		return 1;
 	}
 
@@ -221,7 +221,8 @@ int Interpreter::execute_for_loop(ASTNode *node)
 	int r = 0;
 
 	/* EXECUTE */
-	for(int i=start; i <= end; ++i) {
+	int i;
+	for(i=start; i <= end; ++i) {
 		/* set identifier value */
 		_int_values[s.location] = i;
 
@@ -250,11 +251,13 @@ int Interpreter::execute_for_loop(ASTNode *node)
 					r = execute_assert(do_node->children[i]);
 					break;
 				default:
-					printf("ERROR: Interpreter::execute_for_loop - Invalid statement.\n");
+					printf("\nERROR: Interpreter::execute_for_loop - Invalid statement.\n");
 					r = 1;
 			}
 		}
 	}
+	/* according to example program, there should be last ++ for identifier variable */
+	_int_values[s.location] = i;
 
 	return 0;
 }
@@ -262,7 +265,7 @@ int Interpreter::execute_for_loop(ASTNode *node)
 int Interpreter::execute_read(ASTNode *node)
 {
 	if (node->children[0]->type != ASTNode::VAR_ID) {
-		printf("ERROR: Interpreter::execute_read - Invalid read statement.\n");
+		printf("\nERROR: Interpreter::execute_read - Invalid read statement.\n");
 		return 1;
 	}
 	Symbol s = _symbol_table.find(node->children[0]->value);
@@ -279,11 +282,11 @@ int Interpreter::execute_read(ASTNode *node)
 			_string_values[s.location] = str;
 			break;
 		case Symbol::VARIABLE_BOOL:
-			printf("ERROR: Interpreter::execute_read - Boolean type identifier cannot be used in read statement.\n");
+			printf("\nERROR: Interpreter::execute_read - Boolean type identifier cannot be used in read statement.\n");
 			return 1;
 			break;
 		default:
-			printf("ERROR: Interpreter::execute_read - Identifier %s not initialized.\n", node->children[0]->value.c_str());
+			printf("\nERROR: Interpreter::execute_read - Identifier %s not initialized.\n", node->children[0]->value.c_str());
 			return 1;
 	}
 
@@ -319,7 +322,7 @@ int Interpreter::execute_print(ASTNode *node)
 					}
 					break;
 				default:
-					printf("ERROR: Interpreter::execute_print - Could not define typing for operator.\n");
+					printf("\nERROR: Interpreter::execute_print - Could not define typing for operator.\n");
 					return 1;
 			}
 
@@ -341,7 +344,7 @@ int Interpreter::execute_print(ASTNode *node)
 					}
 					break;
 				default:
-					printf("ERROR: Interpreter::execute_print - Identifier %s is not initialized.\n",
+					printf("\nERROR: Interpreter::execute_print - Identifier %s is not initialized.\n",
 						node->children[0]->value.c_str());
 					return 1;
 			}
@@ -350,7 +353,7 @@ int Interpreter::execute_print(ASTNode *node)
 			printf("%s", node->children[0]->value.c_str());
 			break;
 		default:
-			printf("ERROR: Interpreter::execute_print - Invalid print statement.\n");
+			printf("\nERROR: Interpreter::execute_print - Invalid print statement.\n");
 			return 1;
 	}
 
@@ -375,7 +378,7 @@ int Interpreter::execute_assert(ASTNode *node)
 		case ASTNode::VAR_ID:
 			s = _symbol_table.find(node->children[0]->value);
 			if (s.type != Symbol::VARIABLE_BOOL) {
-				printf("ERROR: Interpreter::execute_assert - %s is non-bool identifier or identifier not initialized.\n",
+				printf("\nERROR: Interpreter::execute_assert - %s is non-bool identifier or identifier not initialized.\n",
 					node->children[0]->value.c_str());
 				return 1;
 			}
@@ -384,12 +387,12 @@ int Interpreter::execute_assert(ASTNode *node)
 			}
 			break;
 		default:
-			printf("ERROR: Interpreter::execute_assert - Assert statement is not valid.\n");
+			printf("\nERROR: Interpreter::execute_assert - Assert statement is not valid.\n");
 			return 1;
 	}
 
 	if (fail) {
-		printf("ERROR: Interpreter::execute_assert - Assert returned false. Cannot continue.\n");
+		printf("\nERROR: Interpreter::execute_assert - Assert returned false. Cannot continue.\n");
 		return 1;
 	}
 
