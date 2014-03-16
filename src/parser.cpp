@@ -64,10 +64,10 @@ void Parser::token_error()
 {
     _n_errors++;
     if (_curr_token.type == Token::ERROR) {
-        printf("Error: cannot resolve token type for token '%s'\n",
+        printf("ERROR: Parser - cannot resolve token type for token '%s'\n",
                _curr_token.str.c_str());
     } else {
-        printf("Error: '%s' is not a valid token for this location.\n", 
+        printf("ERROR: Parser - '%s' is not a valid token for this location.\n", 
                _curr_token.str.c_str());
     }
 }
@@ -85,7 +85,7 @@ void Parser::set_scanner(Scanner *scanner)
 void Parser::create_ast(AST *ast)
 {
 	if (_n_errors != 0 || !_root_node) {
-		printf("Error: Cannot create AST when there are errors.\n");
+		printf("ERROR: Parser::create_ast - Cannot create AST when there are errors.\n");
 		return;
 	}
 	ast->create(_root_node);
