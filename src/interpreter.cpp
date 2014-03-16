@@ -48,7 +48,7 @@ int Interpreter::execute(AST *ast)
 
 int Interpreter::execute_var_init(ASTNode *node)
 {
-	if (_symbol_table.find(node->children[0]->value).type == Symbol::UNDEFINED) {
+	if (_symbol_table.find(node->children[0]->value).type != Symbol::UNDEFINED) {
 		printf("ERROR: Interpreter::execute_var_init - Identifier %s is already initialized.\n", node->children[0]->value.c_str());
 		return 1;
 	}

@@ -1,6 +1,7 @@
 #include "scanner.hpp"
 #include "parser.hpp"
 #include "ast.hpp"
+#include "interpreter.hpp"
 
 #include <iostream>
 #include <string>
@@ -27,10 +28,18 @@ int main(int argc, char* argv[])
 		return 0;
 	}
 	parser.debug_print();
+	
 	AST ast;
 	parser.create_ast(&ast);
+	if (ast.number_of_errors() > 0 ) {
+		std::cout << "Errors when constructing AST. Exiting." << std::endl;
+	}
 	ast.debug_print();
 
-    std::cout << "Done." << std::endl;
+	Interpreter interpreter;
+	std::cout << "Running interpreter." << std::endl;
+	int r = interpreter.execute(&ast);
+
+    std::cout << std::endl << "Done." << std::endl;
     return 0;
 }
